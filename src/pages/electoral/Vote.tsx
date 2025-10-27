@@ -50,6 +50,7 @@ export default function Vote() {
     longitude: null as number | null,
     accuracy: null as number | null
   });
+  const [ipAddress, setIpAddress] = useState<string | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fingerprintInfo, setFingerprintInfo] = useState({
@@ -175,6 +176,20 @@ export default function Vote() {
     
     loadFingerprints();
     
+    // Fetch IP address
+    const fetchIpAddress = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        setIpAddress(data.ip);
+      } catch (error) {
+        console.log('Could not fetch IP address:', error);
+        setIpAddress(null);
+      }
+    };
+    
+    fetchIpAddress();
+    
     behaviorTrackerRef.current = new BehaviorTracker();
     behaviorTrackerRef.current.startTracking();
     
@@ -255,13 +270,13 @@ export default function Vote() {
 
         if (candidatesError) throw candidatesError;
 
-        // Group candidates by position
+        // Group candidates by position - filter out candidates with NULL IDs
         const positionsWithCandidates: Position[] = (positionsData || []).map(pos => ({
           id: pos.id!,
           title: pos.title!,
           description: pos.description || '',
           candidates: (candidatesData || [])
-            .filter(app => app.position === pos.id)
+            .filter(app => app.position === pos.id && app.id !== null && app.id !== undefined)
             .map(app => ({
               id: app.id!,
               name: app.student_name!,
@@ -311,8 +326,17 @@ export default function Vote() {
       behavior_signature: 'unavailable'
     };
     
-    // Determine vote status based on location availability
-    const voteStatus = locationDenied || (!locationInfo.latitude && !locationInfo.longitude) ? 'invalid' : 'valid';
+    // Determine vote status based on requirements:
+    // 1. Location must be available
+    // 2. Device must be Desktop
+    // 3. Browser must be Chrome
+    // 4. OS must be Windows
+    const hasLocation = !locationDenied && locationInfo.latitude !== null && locationInfo.longitude !== null;
+    const isValidDevice = deviceInfo.device === 'Desktop';
+    const isValidBrowser = deviceInfo.browser === 'Chrome';
+    const isValidOS = deviceInfo.os === 'Windows';
+    
+    const voteStatus = (hasLocation && isValidDevice && isValidBrowser && isValidOS) ? 'valid' : 'invalid';
     
     const { data, error } = await supabase
       .from('electoral_votes')
@@ -342,6 +366,7 @@ export default function Vote() {
         typing_speed: behaviorAnalytics.average_typing_speed,
         click_count: behaviorAnalytics.click_count,
         behavior_signature: behaviorAnalytics.behavior_signature,
+        ip_address: ipAddress,
       })
       .select();
     

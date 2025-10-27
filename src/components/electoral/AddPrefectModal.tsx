@@ -235,8 +235,12 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
     setLoading(true);
 
     try {
+      // Generate a unique ID for the application
+      const applicationId = crypto.randomUUID();
+      
       // Create application data object
       const applicationData = {
+        id: applicationId,
         student_id: formData.student_id,
         student_name: formData.student_name,
         student_email: formData.student_email,

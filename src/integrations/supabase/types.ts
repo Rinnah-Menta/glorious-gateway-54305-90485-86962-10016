@@ -117,7 +117,7 @@ export type Database = {
           class_teacher_name: string | null
           class_teacher_tel: string | null
           created_at: string | null
-          id: string | null
+          id: string
           parent_name: string | null
           parent_tel: number | null
           position: string | null
@@ -137,7 +137,7 @@ export type Database = {
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
           created_at?: string | null
-          id?: string | null
+          id?: string
           parent_name?: string | null
           parent_tel?: number | null
           position?: string | null
@@ -157,7 +157,7 @@ export type Database = {
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
           created_at?: string | null
-          id?: string | null
+          id?: string
           parent_name?: string | null
           parent_tel?: number | null
           position?: string | null
