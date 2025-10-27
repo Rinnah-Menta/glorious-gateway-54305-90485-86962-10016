@@ -14,39 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admins: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          id: string | null
-          is_verified: boolean | null
-          name: string | null
-          password_hash: string | null
-          personal_email: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       attendance_records: {
         Row: {
           absent_reason: string | null
@@ -203,102 +170,6 @@ export type Database = {
         }
         Relationships: []
       }
-      electoral_votes: {
-        Row: {
-          average_mouse_speed: number | null
-          battery_charging: boolean | null
-          battery_level: number | null
-          behavior_signature: string | null
-          browser: string | null
-          candidate_id: string
-          candidate_name: string
-          canvas_fingerprint: string | null
-          click_count: number | null
-          created_at: string | null
-          device_type: string | null
-          id: string
-          installed_fonts: string | null
-          ip_address: string | null
-          language: string | null
-          latitude: number | null
-          location_accuracy: number | null
-          longitude: number | null
-          mouse_movement_count: number | null
-          os: string | null
-          position: string
-          screen_resolution: string | null
-          timezone: string | null
-          typing_speed: number | null
-          vote_status: string | null
-          voted_at: string | null
-          voter_id: string
-          voter_name: string
-          webgl_fingerprint: string | null
-        }
-        Insert: {
-          average_mouse_speed?: number | null
-          battery_charging?: boolean | null
-          battery_level?: number | null
-          behavior_signature?: string | null
-          browser?: string | null
-          candidate_id: string
-          candidate_name: string
-          canvas_fingerprint?: string | null
-          click_count?: number | null
-          created_at?: string | null
-          device_type?: string | null
-          id?: string
-          installed_fonts?: string | null
-          ip_address?: string | null
-          language?: string | null
-          latitude?: number | null
-          location_accuracy?: number | null
-          longitude?: number | null
-          mouse_movement_count?: number | null
-          os?: string | null
-          position: string
-          screen_resolution?: string | null
-          timezone?: string | null
-          typing_speed?: number | null
-          vote_status?: string | null
-          voted_at?: string | null
-          voter_id: string
-          voter_name: string
-          webgl_fingerprint?: string | null
-        }
-        Update: {
-          average_mouse_speed?: number | null
-          battery_charging?: boolean | null
-          battery_level?: number | null
-          behavior_signature?: string | null
-          browser?: string | null
-          candidate_id?: string
-          candidate_name?: string
-          canvas_fingerprint?: string | null
-          click_count?: number | null
-          created_at?: string | null
-          device_type?: string | null
-          id?: string
-          installed_fonts?: string | null
-          ip_address?: string | null
-          language?: string | null
-          latitude?: number | null
-          location_accuracy?: number | null
-          longitude?: number | null
-          mouse_movement_count?: number | null
-          os?: string | null
-          position?: string
-          screen_resolution?: string | null
-          timezone?: string | null
-          typing_speed?: number | null
-          vote_status?: string | null
-          voted_at?: string | null
-          voter_id?: string
-          voter_name?: string
-          webgl_fingerprint?: string | null
-        }
-        Relationships: []
-      }
       streams: {
         Row: {
           class_id: string | null
@@ -376,7 +247,7 @@ export type Database = {
           classesTaught: string | null
           contactNumber: number | null
           created_at: string | null
-          default_password: string | null
+          default_password: number | null
           email: string | null
           id: string | null
           is_verified: boolean | null
@@ -394,7 +265,7 @@ export type Database = {
           classesTaught?: string | null
           contactNumber?: number | null
           created_at?: string | null
-          default_password?: string | null
+          default_password?: number | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null
@@ -412,7 +283,7 @@ export type Database = {
           classesTaught?: string | null
           contactNumber?: number | null
           created_at?: string | null
-          default_password?: string | null
+          default_password?: number | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null
