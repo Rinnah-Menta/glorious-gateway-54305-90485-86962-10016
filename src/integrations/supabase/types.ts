@@ -170,6 +170,102 @@ export type Database = {
         }
         Relationships: []
       }
+      electoral_votes: {
+        Row: {
+          average_mouse_speed: number | null
+          battery_charging: boolean | null
+          battery_level: number | null
+          behavior_signature: string | null
+          browser: string | null
+          candidate_id: string
+          candidate_name: string
+          canvas_fingerprint: string | null
+          click_count: number | null
+          created_at: string | null
+          device_type: string | null
+          id: string
+          installed_fonts: string | null
+          ip_address: string | null
+          language: string | null
+          latitude: number | null
+          location_accuracy: number | null
+          longitude: number | null
+          mouse_movement_count: number | null
+          os: string | null
+          position: string
+          screen_resolution: string | null
+          timezone: string | null
+          typing_speed: number | null
+          vote_status: string | null
+          voted_at: string | null
+          voter_id: string
+          voter_name: string
+          webgl_fingerprint: string | null
+        }
+        Insert: {
+          average_mouse_speed?: number | null
+          battery_charging?: boolean | null
+          battery_level?: number | null
+          behavior_signature?: string | null
+          browser?: string | null
+          candidate_id: string
+          candidate_name: string
+          canvas_fingerprint?: string | null
+          click_count?: number | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          installed_fonts?: string | null
+          ip_address?: string | null
+          language?: string | null
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
+          mouse_movement_count?: number | null
+          os?: string | null
+          position: string
+          screen_resolution?: string | null
+          timezone?: string | null
+          typing_speed?: number | null
+          vote_status?: string | null
+          voted_at?: string | null
+          voter_id: string
+          voter_name: string
+          webgl_fingerprint?: string | null
+        }
+        Update: {
+          average_mouse_speed?: number | null
+          battery_charging?: boolean | null
+          battery_level?: number | null
+          behavior_signature?: string | null
+          browser?: string | null
+          candidate_id?: string
+          candidate_name?: string
+          canvas_fingerprint?: string | null
+          click_count?: number | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          installed_fonts?: string | null
+          ip_address?: string | null
+          language?: string | null
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
+          mouse_movement_count?: number | null
+          os?: string | null
+          position?: string
+          screen_resolution?: string | null
+          timezone?: string | null
+          typing_speed?: number | null
+          vote_status?: string | null
+          voted_at?: string | null
+          voter_id?: string
+          voter_name?: string
+          webgl_fingerprint?: string | null
+        }
+        Relationships: []
+      }
       streams: {
         Row: {
           class_id: string | null
