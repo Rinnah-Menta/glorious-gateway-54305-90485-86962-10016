@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string | null
+          is_verified: boolean | null
+          name: string | null
+          password_hash: string | null
+          personal_email: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          name?: string | null
+          password_hash?: string | null
+          personal_email?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          name?: string | null
+          password_hash?: string | null
+          personal_email?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           absent_reason: string | null
