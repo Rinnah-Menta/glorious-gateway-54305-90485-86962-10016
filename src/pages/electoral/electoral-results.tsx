@@ -60,8 +60,9 @@ const ElectoralResults = () => {
         'NAKASUJJA SHANNAH': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg'
       };
 
-      // Build pages data
-      const pagesData = Object.entries(positionVotes).map(([position, candidateVoteCounts]) => {
+      // Build pages data - one page per candidate
+      const pagesData = [];
+      Object.entries(positionVotes).forEach(([position, candidateVoteCounts]) => {
         const candidatesForPosition = Object.entries(candidateVoteCounts)
           .filter(([candidateId]) => candidateMap[candidateId]) // Only include candidates that exist
           .map(([candidateId, voteCount]) => {
@@ -80,17 +81,17 @@ const ElectoralResults = () => {
             return {
               id: candidateId,
               name: candidate.student_name,
-              party: position,
+              position: position,
               votes: voteCount,
               photo: photo
             };
           })
           .sort((a, b) => b.votes - a.votes);
 
-        return {
-          title: position,
-          candidates: candidatesForPosition
-        };
+        // Add each candidate as a separate page
+        candidatesForPosition.forEach(candidate => {
+          pagesData.push(candidate);
+        });
       });
 
       setPages(pagesData);
@@ -151,7 +152,7 @@ const ElectoralResults = () => {
     }
     autoScrollTimerRef.current = setInterval(() => {
       nextPage();
-    }, 60000);
+    }, 30000);
   };
 
   const resetAutoScroll = () => {
@@ -225,7 +226,7 @@ const ElectoralResults = () => {
     };
   }, [currentPage, pages]);
 
-  const CandidateCard = ({ candidate, position, pageIndex }) => {
+  const CandidateDisplay = ({ candidate }) => {
     const [displayVotes, setDisplayVotes] = useState(0);
     const animationRef = useRef(null);
 
@@ -260,22 +261,24 @@ const ElectoralResults = () => {
     }, [candidate.votes]);
 
     return (
-      <div className={`candidate-card position-${position}`}>
-        {position === 1 && <div className="crown-emoji">👑</div>}
-        <div className="photo-container">
+      <div className="candidate-full-display">
+        <div className="photo-side">
           <img src={candidate.photo} alt={candidate.name} />
         </div>
-        <h3 className="candidate-name">{candidate.name}</h3>
-        <p className="candidate-party">{candidate.party}</p>
-        <div className="votes-display">
-          <span className="votes-label">Total Votes:</span>
-          <span className="votes-count">{displayVotes.toLocaleString()}</span>
-        </div>
-        {voteChanges[candidate.id] && (
-          <div className="vote-change show">
-            +{voteChanges[candidate.id].toLocaleString()}
+        <div className="details-side">
+          <div className="detail-item">
+            <span className="detail-label">NAME:</span>
+            <span className="detail-value">{candidate.name}</span>
           </div>
-        )}
+          <div className="detail-item">
+            <span className="detail-label">POST:</span>
+            <span className="detail-value">{candidate.position}</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">VOTES:</span>
+            <span className="detail-value votes-number">{displayVotes.toLocaleString()}</span>
+          </div>
+        </div>
       </div>
     );
   };
@@ -372,14 +375,102 @@ const ElectoralResults = () => {
           animation: livePulse 1.5s infinite;
         }
 
-        .results-container {
-          max-width: 1000px;
+        .candidate-full-display {
+          max-width: 1200px;
           margin: 0 auto;
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 15px;
-          padding: 10px;
-          padding-top: 30px;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
+          min-height: 60vh;
+          background: rgba(255,255,255,0.98);
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .photo-side {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 40px;
+        }
+
+        .photo-side img {
+          width: 100%;
+          max-width: 400px;
+          height: auto;
+          object-fit: cover;
+          border-radius: 15px;
+          box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+          border: 5px solid rgba(255,255,255,0.3);
+        }
+
+        .details-side {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: 60px;
+          gap: 30px;
+        }
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .detail-label {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #667eea;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+        }
+
+        .detail-value {
+          font-size: 2rem;
+          font-weight: 800;
+          color: #2d3748;
+          word-wrap: break-word;
+        }
+
+        .detail-value.votes-number {
+          font-size: 3.5rem;
+          color: #764ba2;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+          .candidate-full-display {
+            grid-template-columns: 1fr;
+            min-height: auto;
+          }
+
+          .photo-side {
+            padding: 30px;
+          }
+
+          .photo-side img {
+            max-width: 300px;
+          }
+
+          .details-side {
+            padding: 40px 30px;
+            gap: 20px;
+          }
+
+          .detail-label {
+            font-size: 1rem;
+          }
+
+          .detail-value {
+            font-size: 1.5rem;
+          }
+
+          .detail-value.votes-number {
+            font-size: 2.5rem;
+          }
         }
 
         .candidate-card {
@@ -940,8 +1031,7 @@ const ElectoralResults = () => {
       `}</style>
 
       <div>
-        {candidatesData.map((page, pageIndex) => {
-          const sortedCandidates = [...page.candidates].sort((a, b) => b.votes - a.votes);
+        {candidatesData.map((candidate, pageIndex) => {
           const isActive = pageIndex === currentPage;
           const animationClass = isActive ? currentTransition.in : '';
           
@@ -956,22 +1046,12 @@ const ElectoralResults = () => {
             >
               <div className="header">
                 <h1>🗳️ Live Electoral Results</h1>
-                <p className="post-name">{page.title}</p>
                 <div className="live-indicator">
                   <span className="live-dot"></span>
                   <span>LIVE</span>
                 </div>
               </div>
-              <div className="results-container">
-                {sortedCandidates.map((candidate, index) => (
-                  <CandidateCard
-                    key={candidate.id}
-                    candidate={candidate}
-                    position={index + 1}
-                    pageIndex={pageIndex}
-                  />
-                ))}
-              </div>
+              <CandidateDisplay candidate={candidate} />
             </div>
           );
         })}
