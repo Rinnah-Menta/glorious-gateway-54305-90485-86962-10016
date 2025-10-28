@@ -152,7 +152,7 @@ const ElectoralResults = () => {
     }
     autoScrollTimerRef.current = setInterval(() => {
       nextPage();
-    }, 60000);
+    }, 30000);
   };
 
   const resetAutoScroll = () => {
