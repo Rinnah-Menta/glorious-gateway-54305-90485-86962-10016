@@ -217,14 +217,17 @@ export default function Vote() {
           .from('students')
           .select('id, name, email, class_id, stream_id')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (studentError) throw studentError;
+        if (!student) {
+          throw new Error('Student data not found');
+        }
 
         // Fetch class and stream separately
         const [classResult, streamResult] = await Promise.all([
-          supabase.from('classes').select('name').eq('id', student.class_id).single(),
-          supabase.from('streams').select('name').eq('id', student.stream_id).single()
+          supabase.from('classes').select('name').eq('id', student.class_id).maybeSingle(),
+          supabase.from('streams').select('name').eq('id', student.stream_id).maybeSingle()
         ]);
 
         setStudentData({
@@ -234,22 +237,7 @@ export default function Vote() {
           streams: { name: streamResult.data?.name || 'Unknown' }
         });
 
-        // Check if student has already voted
-        const { data: existingVotes, error: votesError } = await supabase
-          .from('electoral_votes')
-          .select('id')
-          .eq('voter_id', user.id)
-          .limit(1);
-
-        if (votesError) throw votesError;
-
-        if (existingVotes && existingVotes.length > 0) {
-          setHasAlreadyVoted(true);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch active positions
+        // Fetch active positions first
         const { data: positionsData, error: positionsError } = await supabase
           .from('electoral_positions')
           .select('*')
@@ -257,6 +245,9 @@ export default function Vote() {
           .order('title');
 
         if (positionsError) throw positionsError;
+        if (!positionsData || positionsData.length === 0) {
+          throw new Error('No active positions found');
+        }
 
         // Fetch confirmed candidates
         const { data: candidatesData, error: candidatesError } = await supabase
@@ -267,30 +258,89 @@ export default function Vote() {
 
         if (candidatesError) throw candidatesError;
 
-        // Group candidates by position - filter out candidates with NULL IDs
-        const positionsWithCandidates: Position[] = (positionsData || []).map(pos => ({
+        // Get ALL positions the student has already voted for
+        const { data: existingVotes, error: votesError } = await supabase
+          .from('electoral_votes')
+          .select('position')
+          .eq('voter_id', user.id);
+
+        if (votesError) throw votesError;
+
+        // Create a set of position TITLES they've voted for (stored as titles in DB)
+        const votedPositionTitles = new Set(
+          (existingVotes || []).map(v => v.position)
+        );
+
+        console.log('Already voted for positions:', Array.from(votedPositionTitles));
+
+        // Filter out positions they've already voted for
+        const remainingPositions = positionsData.filter(pos => 
+          !votedPositionTitles.has(pos.title)
+        );
+
+        console.log('Remaining positions to vote:', remainingPositions.map(p => p.title));
+
+        // If no remaining positions, they've completed voting
+        if (remainingPositions.length === 0) {
+          console.log('All positions voted - marking as complete');
+          sessionStorage.setItem(`voteSubmitted_${user.id}`, 'true');
+          setHasAlreadyVoted(true);
+          setLoading(false);
+          return;
+        }
+
+        // Clear completion flag if they have remaining positions
+        sessionStorage.removeItem(`voteSubmitted_${user.id}`);
+
+        // Build ballot with ONLY remaining positions
+        const positionsWithCandidates: Position[] = remainingPositions.map(pos => ({
           id: pos.id!,
           title: pos.title!,
           description: pos.description || '',
           candidates: (candidatesData || [])
             .filter(app => app.position === pos.id && app.id !== null && app.id !== undefined)
-            .map(app => ({
-              id: app.id!,
-              name: app.student_name!,
-              email: app.student_email!,
-              photo: app.student_photo,
-              class: app.class_name!,
-              stream: app.stream_name!
-            }))
-        })).filter(pos => pos.candidates.length > 0); // Only show positions with candidates
-        
+            .map(app => {
+              // Manually set photos for specific candidates
+              let photo = app.student_photo;
+              const name = app.student_name?.toUpperCase() || '';
+              
+              if (name.includes('JANAT') || name.includes('KALIBBALA')) {
+                photo = '/janat.jpg';
+              } else if (name.includes('SHANNAH') || name.includes('NAKASUJJA')) {
+                photo = '/shannah.jpg';
+              }
+              
+              return {
+                id: app.id!,
+                name: app.student_name!,
+                email: app.student_email!,
+                photo: photo,
+                class: app.class_name!,
+                stream: app.stream_name!
+              };
+            })
+        })).filter(pos => pos.candidates.length > 0); // Only positions with candidates
+
+        if (positionsWithCandidates.length === 0) {
+          throw new Error('No candidates available for remaining positions');
+        }
+
+        console.log('Loading ballot with', positionsWithCandidates.length, 'remaining positions');
         setPositions(positionsWithCandidates);
+        
+        // Show informative toast if they're resuming
+        if (votedPositionTitles.size > 0) {
+          toast({
+            title: "Resuming Voting",
+            description: `You have already voted for ${votedPositionTitles.size} position(s). Continuing with remaining ${positionsWithCandidates.length} position(s).`,
+          });
+        }
         
       } catch (error) {
         console.error('Error loading voting data:', error);
         toast({
           title: "Error",
-          description: "Failed to load voting data. Please refresh the page.",
+          description: error.message || "Failed to load voting data. Please refresh the page.",
           variant: "destructive"
         });
       } finally {

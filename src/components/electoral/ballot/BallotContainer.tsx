@@ -101,23 +101,38 @@ export function BallotContainer({
 
   // Restore session if available (user-specific)
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || positions.length === 0) return;
     
     const savedData = sessionStorage.getItem(`ballotData_${userId}`);
     if (savedData) {
       try {
         const data = JSON.parse(savedData);
-        setSelections(data.selections || {});
-        setLocked(data.locked || {});
         
-        const unvotedIndex = positions.findIndex(pos => !data.selections[pos.id]);
+        // Only restore selections that match CURRENT positions (in case positions were filtered)
+        const validSelections: Record<string, string> = {};
+        const validLocked: Record<string, boolean> = {};
+        
+        positions.forEach(pos => {
+          if (data.selections?.[pos.id]) {
+            validSelections[pos.id] = data.selections[pos.id];
+            validLocked[pos.id] = data.locked?.[pos.id] || false;
+          }
+        });
+        
+        setSelections(validSelections);
+        setLocked(validLocked);
+        
+        // Find first unvoted position
+        const unvotedIndex = positions.findIndex(pos => !validSelections[pos.id]);
         if (unvotedIndex !== -1) {
           setCurrentPositionIndex(unvotedIndex);
-        } else if (Object.keys(data.selections).length === positions.length) {
+        } else if (Object.keys(validSelections).length === positions.length) {
           setShowReview(true);
         }
       } catch (e) {
         console.error('Failed to restore session:', e);
+        // Clear corrupted session data
+        sessionStorage.removeItem(`ballotData_${userId}`);
       }
     }
   }, [positions, userId]);
@@ -128,7 +143,7 @@ export function BallotContainer({
     sessionStorage.setItem(`ballotData_${userId}`, JSON.stringify({ selections, locked }));
   }, [selections, locked, userId]);
 
-  const handleSelectCandidate = (candidateId: string) => {
+  const handleSelectCandidate = async (candidateId: string) => {
     if (locked[currentPosition.id]) return;
 
     // Immediately mark as selected and lock
@@ -138,26 +153,28 @@ export function BallotContainer({
     setSelections(newSelections);
     setLocked(newLocked);
 
-    // Vote in background (no await to block UI)
-    onVotePosition(currentPosition.id, candidateId).catch(error => {
+    try {
+      // Wait for vote to be recorded before advancing
+      await onVotePosition(currentPosition.id, candidateId);
+      
+      // Auto-advance after successful vote
+      setTimeout(() => {
+        if (currentPositionIndex < totalPositions - 1) {
+          advanceToNext();
+        } else {
+          // Last position - auto-submit after showing review briefly
+          setTimeout(() => {
+            handleFinalSubmit();
+          }, 800);
+        }
+      }, 1500);
+    } catch (error) {
       console.error('Error voting:', error);
       // Unlock position if vote fails
       setLocked({ ...locked, [currentPosition.id]: false });
       setSelections({ ...selections });
       alert(`Failed to record vote: ${error.message || 'Unknown error'}. Please try again.`);
-    });
-
-    // Auto-advance after animation completes
-    setTimeout(() => {
-      if (currentPositionIndex < totalPositions - 1) {
-        advanceToNext();
-      } else {
-        // Last position - auto-submit after showing review briefly
-        setTimeout(() => {
-          handleFinalSubmit();
-        }, 800);
-      }
-    }, 1500);
+    }
   };
 
   const advanceToNext = () => {
@@ -222,6 +239,18 @@ export function BallotContainer({
 
   if (showSuccess) {
     return <SuccessOverlay isActive={true} />;
+  }
+
+  // Show loading state if positions haven't loaded yet
+  if (!positions || positions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center p-5">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+          <p className="text-lg font-semibold text-white">Loading ballot...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
