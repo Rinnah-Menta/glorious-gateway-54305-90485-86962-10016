@@ -9,9 +9,11 @@ const ElectoralResults = () => {
   const [candidatesData, setCandidatesData] = useState([]);
   const [voteChanges, setVoteChanges] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTransition, setCurrentTransition] = useState({ in: 'slideInRight', out: 'slideOutLeft' });
   const autoScrollTimerRef = useRef(null);
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
+  const pageContainerRef = useRef(null);
 
   // Load real electoral data from database
   useEffect(() => {
@@ -52,17 +54,35 @@ const ElectoralResults = () => {
         candidateMap[candidate.id] = candidate;
       });
 
+      // Hardcoded photo mapping for specific students
+      const photoMapping = {
+        'KALIBBALA JANAT': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg',
+        'NAKASUJJA SHANNAH': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg'
+      };
+
       // Build pages data
       const pagesData = Object.entries(positionVotes).map(([position, candidateVoteCounts]) => {
         const candidatesForPosition = Object.entries(candidateVoteCounts)
+          .filter(([candidateId]) => candidateMap[candidateId]) // Only include candidates that exist
           .map(([candidateId, voteCount]) => {
             const candidate = candidateMap[candidateId];
+            const studentName = candidate.student_name.toUpperCase();
+            
+            // Check if student has a hardcoded photo
+            let photo = candidate.student_photo;
+            for (const [name, url] of Object.entries(photoMapping)) {
+              if (studentName.includes(name)) {
+                photo = url;
+                break;
+              }
+            }
+            
             return {
               id: candidateId,
-              name: candidate?.student_name || 'Unknown',
+              name: candidate.student_name,
               party: position,
               votes: voteCount,
-              photo: candidate?.student_photo || 'https://i.pravatar.cc/150?img=1'
+              photo: photo
             };
           })
           .sort((a, b) => b.votes - a.votes);
@@ -129,7 +149,12 @@ const ElectoralResults = () => {
   const goToPage = (pageIndex) => {
     if (isTransitioning || pageIndex === currentPage) return;
     
+    // Select random transition
+    const randomTransition = transitions[Math.floor(Math.random() * transitions.length)];
+    setCurrentTransition(randomTransition);
+    
     setIsTransitioning(true);
+    
     setCurrentPage(pageIndex);
     
     setTimeout(() => {
@@ -271,6 +296,7 @@ const ElectoralResults = () => {
 
   return (
     <div 
+      ref={pageContainerRef}
       style={{ 
         margin: 0,
         boxSizing: 'border-box',
@@ -279,7 +305,8 @@ const ElectoralResults = () => {
         minHeight: '100vh',
         padding: '20px',
         color: '#fff',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        overflowY: 'auto'
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -663,13 +690,16 @@ const ElectoralResults = () => {
         }
 
         .page-content {
-          display: none;
           animation-duration: 0.8s;
           animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
           animation-fill-mode: both;
         }
 
         .page-content.active {
+          display: block;
+        }
+        
+        .page-content.exiting {
           display: block;
         }
 
@@ -895,13 +925,16 @@ const ElectoralResults = () => {
       <div>
         {candidatesData.map((page, pageIndex) => {
           const sortedCandidates = [...page.candidates].sort((a, b) => b.votes - a.votes);
+          const isActive = pageIndex === currentPage;
+          const animationClass = isActive ? currentTransition.in : '';
           
           return (
             <div
               key={pageIndex}
-              className={`page-content ${pageIndex === currentPage ? 'active' : ''}`}
+              className={`page-content ${isActive ? 'active' : ''}`}
               style={{
-                display: pageIndex === currentPage ? 'block' : 'none'
+                display: isActive ? 'block' : 'none',
+                animationName: animationClass
               }}
             >
               <div className="header">
