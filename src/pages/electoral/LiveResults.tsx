@@ -16,6 +16,7 @@ import {
   CheckCircle
 } from "lucide-react";
 import { InvalidVotesCard } from "@/components/electoral/InvalidVotesCard";
+import { LiveResultsHeroGrid } from "@/components/electoral/LiveResultsHeroGrid";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { motion } from "framer-motion";
 
 interface ResultCandidate {
+  id?: string;
   name: string;
   class: string;
   stream: string;
@@ -33,6 +35,7 @@ interface ResultCandidate {
 }
 
 interface PositionResult {
+  id?: string;
   title: string;
   candidates: ResultCandidate[];
   totalVotes: number;
@@ -147,7 +150,8 @@ export default function LiveResults() {
       // Fetch actual votes from database
       const { data: votesData, error: votesError } = await supabase
         .from('electoral_votes')
-        .select('candidate_id, candidate_name, position, vote_status');
+        .select('candidate_id, candidate_name, position, vote_status')
+        .limit(100000); // Set high limit to fetch all votes
       
       if (votesError) throw votesError;
 
@@ -166,10 +170,11 @@ export default function LiveResults() {
             voteCounts[vote.candidate_id] = (voteCounts[vote.candidate_id] || 0) + 1;
           });
         
-        const candidates: ResultCandidate[] = positionCandidates.map(candidate => {
+        const candidates: ResultCandidate[] = positionCandidates.map((candidate, index) => {
           const voteCount = voteCounts[candidate.id!] || 0;
           
           return {
+            id: candidate.id!,
             name: candidate.student_name!,
             class: candidate.class_name!,
             stream: candidate.stream_name!,
@@ -187,6 +192,7 @@ export default function LiveResults() {
         });
         
         calculatedResults[position.id!] = {
+          id: position.id!,
           title: position.title!,
           candidates,
           totalVotes: totalPositionVotes,
@@ -475,6 +481,27 @@ export default function LiveResults() {
             isAdmin={userRole === 'admin'}
           />
         </div>
+
+        {/* Hero Grid Section */}
+        {electionPhase.current !== 'applications' && Object.keys(results).length > 0 && (
+          <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 rounded-lg border border-primary/20 p-6 md:p-8">
+            <LiveResultsHeroGrid 
+              positions={Object.entries(results).map(([key, position]) => ({
+                id: key,
+                title: position.title,
+                candidates: position.candidates.map((candidate, index) => ({
+                  id: candidate.id || `${key}-${index}`,
+                  name: candidate.name,
+                  photo: candidate.photo || null,
+                  votes: candidate.votes,
+                  class: candidate.class,
+                  stream: candidate.stream,
+                  rank: index + 1
+                }))
+              }))}
+            />
+          </div>
+        )}
 
         {/* Refresh Button */}
         {electionPhase.current !== 'applications' && (

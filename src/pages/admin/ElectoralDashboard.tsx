@@ -44,6 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from "recharts";
 import { CandidatesSection } from "@/components/electoral/CandidatesSection";
+import ElectoralResults from "@/pages/electoral/electoral-results";
 
 interface Vote {
   id: string;
@@ -105,15 +106,26 @@ export default function ElectoralDashboard() {
       const { data, error } = await supabase
         .from('electoral_votes')
         .select('*')
-        .order('voted_at', { ascending: false });
+        .order('voted_at', { ascending: false })
+        .limit(100000); // Set high limit to fetch all votes
       
       if (!error && data) {
+        // Fetch all candidates with photos
+        const { data: candidates } = await supabase
+          .from('electoral_applications')
+          .select('student_id, student_photo')
+          .eq('status', 'confirmed');
+        
+        const candidatePhotos = new Map(
+          candidates?.map(c => [c.student_id, c.student_photo]) || []
+        );
+        
         // Enrich with student data
         const enrichedVotes = await Promise.all(
           data.map(async (vote) => {
             const { data: student } = await supabase
               .from('students')
-              .select('email, class_id, stream_id')
+              .select('email, class_id, stream_id, gender')
               .eq('id', vote.voter_id)
               .single();
               
@@ -125,8 +137,10 @@ export default function ElectoralDashboard() {
               
               return {
                 ...vote,
+                candidate_photo: candidatePhotos.get(vote.candidate_id),
                 voter: {
                   email: student.email,
+                  gender: student.gender,
                   classes: { name: classData.data?.name },
                   streams: { name: streamData.data?.name }
                 }
@@ -532,14 +546,17 @@ export default function ElectoralDashboard() {
     
     return positions.map(position => {
       const positionVotes = filteredVotes.filter(v => v.position === position);
-      const candidateVotes: Record<string, number> = {};
+      const candidateVotes: Record<string, { votes: number; photo?: string }> = {};
       
       positionVotes.forEach(vote => {
-        candidateVotes[vote.candidate_name] = (candidateVotes[vote.candidate_name] || 0) + 1;
+        if (!candidateVotes[vote.candidate_name]) {
+          candidateVotes[vote.candidate_name] = { votes: 0, photo: vote.candidate_photo };
+        }
+        candidateVotes[vote.candidate_name].votes += 1;
       });
 
       const sortedCandidates = Object.entries(candidateVotes)
-        .map(([name, votes]) => ({ name, votes }))
+        .map(([name, data]) => ({ name, votes: data.votes, photo: data.photo }))
         .sort((a, b) => b.votes - a.votes);
 
       if (sortedCandidates.length < 2) return null;
@@ -556,6 +573,7 @@ export default function ElectoralDashboard() {
 
       return {
         candidateName: leader.name,
+        candidatePhoto: leader.photo,
         position,
         totalVotes: leader.votes,
         voteShare,
@@ -610,11 +628,25 @@ export default function ElectoralDashboard() {
   const demographicsData = useMemo(() => {
     const positions = Array.from(new Set(filteredVotes.map(v => v.position)));
     
+    // Get unique classes and streams from actual votes
+    const classVoteCounts: Record<string, number> = {};
+    const streamVoteCounts: Record<string, number> = {};
+    
+    filteredVotes.forEach(vote => {
+      const className = vote.voter?.classes?.name;
+      const streamName = vote.voter?.streams?.name;
+      if (className) classVoteCounts[className] = (classVoteCounts[className] || 0) + 1;
+      if (streamName) streamVoteCounts[streamName] = (streamVoteCounts[streamName] || 0) + 1;
+    });
+    
+    const totalVotes = filteredVotes.length || 1;
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#6366f1"];
+    
     return {
       gender: positions.map(position => {
         const positionVotes = filteredVotes.filter(v => v.position === position);
-        const maleVotes = positionVotes.filter(v => v.voter_name.includes('Male') || Math.random() > 0.5).length;
-        const femaleVotes = positionVotes.length - maleVotes;
+        const maleVotes = positionVotes.filter(v => v.voter?.gender === 'Male').length;
+        const femaleVotes = positionVotes.filter(v => v.voter?.gender === 'Female').length;
         const total = positionVotes.length || 1;
 
         return {
@@ -625,20 +657,23 @@ export default function ElectoralDashboard() {
       }),
       classData: positions.map(position => ({
         position,
-        data: [
-          { name: "Form 4", percentage: 42, color: "#3b82f6" },
-          { name: "Form 3", percentage: 28, color: "#10b981" },
-          { name: "Form 2", percentage: 20, color: "#f59e0b" },
-          { name: "Form 1", percentage: 10, color: "#ef4444" }
-        ]
+        data: Object.entries(classVoteCounts)
+          .map(([name, count], index) => ({
+            name,
+            percentage: Math.round((count / totalVotes) * 100),
+            color: colors[index % colors.length]
+          }))
+          .sort((a, b) => b.percentage - a.percentage)
       })),
       streamData: positions.map(position => ({
         position,
-        data: [
-          { name: "Sciences", percentage: 45, color: "#3b82f6" },
-          { name: "Arts", percentage: 30, color: "#ec4899" },
-          { name: "Commerce", percentage: 25, color: "#10b981" }
-        ]
+        data: Object.entries(streamVoteCounts)
+          .map(([name, count], index) => ({
+            name,
+            percentage: Math.round((count / totalVotes) * 100),
+            color: colors[index % colors.length]
+          }))
+          .sort((a, b) => b.percentage - a.percentage)
       }))
     };
   }, [filteredVotes]);
@@ -717,9 +752,9 @@ export default function ElectoralDashboard() {
     {
       id: "timeline",
       title: "Voting Activity",
-      content: <TimelineChart data={timelineData} />
+      content: <TimelineChart data={timelineData} isLoading={isLoading} />
     }
-  ], [positionData, timelineData]);
+  ], [positionData, timelineData, isLoading]);
 
   if (isLoading) {
     return (
@@ -784,12 +819,13 @@ export default function ElectoralDashboard() {
 
         {/* Tabs for different views */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="live">Live Results</TabsTrigger>
             <TabsTrigger value="candidates">Candidates</TabsTrigger>
             <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+            <TabsTrigger value="results">Results</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -806,6 +842,7 @@ export default function ElectoralDashboard() {
                   iconBg="bg-blue-100 dark:bg-blue-900/30"
                   iconColor="text-blue-600 dark:text-blue-400"
                   onClick={() => handleMetricsClick('total')}
+                  isLoading={isLoading}
                 />
                 <EnhancedMetricsCard
                   title="Unique Voters"
@@ -815,6 +852,7 @@ export default function ElectoralDashboard() {
                   iconBg="bg-green-100 dark:bg-green-900/30"
                   iconColor="text-green-600 dark:text-green-400"
                   onClick={() => handleMetricsClick('voters')}
+                  isLoading={isLoading}
                 />
                 <EnhancedMetricsCard
                   title="Voter Turnout"
@@ -824,6 +862,7 @@ export default function ElectoralDashboard() {
                   iconBg="bg-yellow-100 dark:bg-yellow-900/30"
                   iconColor="text-yellow-600 dark:text-yellow-400"
                   onClick={() => handleMetricsClick('turnout')}
+                  isLoading={isLoading}
                 />
                 <EnhancedMetricsCard
                   title="Positions Filled"
@@ -833,11 +872,13 @@ export default function ElectoralDashboard() {
                   iconBg="bg-purple-100 dark:bg-purple-900/30"
                   iconColor="text-purple-600 dark:text-purple-400"
                   onClick={() => handleMetricsClick('candidates')}
+                  isLoading={isLoading}
                 />
                 <InvalidVotesCard
                   count={stats.invalidVotes}
                   onClick={() => setInvalidVotesDialogOpen(true)}
                   isAdmin={userRole === 'admin'}
+                  isLoading={isLoading}
                 />
               </div>
 
@@ -850,6 +891,7 @@ export default function ElectoralDashboard() {
                   trend="+12%"
                   delay={0}
                   onClick={() => handleMetricsClick('total')}
+                  isLoading={isLoading}
                 />
                 <MobileSummaryCard
                   title="Voters"
@@ -857,6 +899,7 @@ export default function ElectoralDashboard() {
                   icon={Users}
                   delay={100}
                   onClick={() => handleMetricsClick('voters')}
+                  isLoading={isLoading}
                 />
                 <MobileSummaryCard
                   title="Candidates"
@@ -864,6 +907,7 @@ export default function ElectoralDashboard() {
                   icon={Award}
                   delay={200}
                   onClick={() => handleMetricsClick('candidates')}
+                  isLoading={isLoading}
                 />
                 <MobileSummaryCard
                   title="Last Vote"
@@ -872,12 +916,14 @@ export default function ElectoralDashboard() {
                   subtext={stats.latestVote ? format(parseISO(stats.latestVote), 'HH:mm') : 'No votes'}
                   delay={300}
                   onClick={() => handleMetricsClick('turnout')}
+                  isLoading={isLoading}
                 />
                 <div className="col-span-2">
                   <InvalidVotesCard
                     count={stats.invalidVotes}
                     onClick={() => setInvalidVotesDialogOpen(true)}
                     isAdmin={userRole === 'admin'}
+                    isLoading={isLoading}
                   />
                 </div>
               </div>
@@ -904,6 +950,7 @@ export default function ElectoralDashboard() {
                 label="Total Eligible Voters"
                 IconComponent={School}
                 onClick={() => handleQuickStatsClick("Total Eligible Voters")}
+                isLoading={isLoading}
               />
               <QuickStatsCard
                 icon="✅"
@@ -911,6 +958,7 @@ export default function ElectoralDashboard() {
                 label="Voters Checked In"
                 IconComponent={CheckCircle}
                 onClick={() => handleMetricsClick('voters')}
+                isLoading={isLoading}
               />
               <QuickStatsCard
                 icon="⏰"
@@ -918,6 +966,7 @@ export default function ElectoralDashboard() {
                 label="Yet to Vote"
                 IconComponent={Timer}
                 onClick={() => handleQuickStatsClick("Yet to Vote")}
+                isLoading={isLoading}
               />
             </div>
           </TabsContent>
@@ -976,6 +1025,7 @@ export default function ElectoralDashboard() {
                   data={timelineData} 
                   onTimeSlotClick={handleTimeSlotClick}
                   isAdmin={userRole === 'admin'}
+                  isLoading={isLoading}
                 />
                 <RecentVotesTable votes={filteredVotes} onVoteClick={handleVoteRowClick} userRole={userRole} />
               </div>
@@ -986,18 +1036,21 @@ export default function ElectoralDashboard() {
                   icon="⏱️"
                   value="2h 15m"
                   label="Time Remaining"
+                  isLoading={isLoading}
                 />
                 <QuickStatsCard
                   icon="📋"
                   value={Array.from(new Set(filteredVotes.map(v => v.position))).length}
                   label="Active Polls"
                   onClick={() => handleQuickStatsClick("Active Polls")}
+                  isLoading={isLoading}
                 />
                 <QuickStatsCard
                   icon="🔔"
                   value={anomalies.length}
                   label="Recent Alerts"
                   onClick={() => handleQuickStatsClick("Recent Alerts")}
+                  isLoading={isLoading}
                 />
               </div>
             </div>
@@ -1008,6 +1061,7 @@ export default function ElectoralDashboard() {
                 data={timelineData} 
                 onTimeSlotClick={handleTimeSlotClick}
                 isAdmin={userRole === 'admin'}
+                isLoading={isLoading}
               />
               
               <section aria-label="Recent votes">
@@ -1081,6 +1135,11 @@ export default function ElectoralDashboard() {
 
             {/* Export Controls */}
             <ExportControls onExport={handleExport} />
+          </TabsContent>
+
+          {/* Results Tab */}
+          <TabsContent value="results" className="space-y-6">
+            <ElectoralResults />
           </TabsContent>
         </Tabs>
       </div>

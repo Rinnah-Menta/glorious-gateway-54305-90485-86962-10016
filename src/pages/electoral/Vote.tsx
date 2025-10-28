@@ -52,7 +52,6 @@ export default function Vote() {
   });
   const [ipAddress, setIpAddress] = useState<string | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
-  const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fingerprintInfo, setFingerprintInfo] = useState({
     canvasFingerprint: '',
     webglFingerprint: '',
@@ -66,8 +65,10 @@ export default function Vote() {
   // Warn user before leaving if voting is incomplete
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      const ballotData = sessionStorage.getItem('ballotData');
-      const voteSubmitted = sessionStorage.getItem('voteSubmitted');
+      if (!user?.id) return;
+      
+      const ballotData = sessionStorage.getItem(`ballotData_${user.id}`);
+      const voteSubmitted = sessionStorage.getItem(`voteSubmitted_${user.id}`);
       
       // Only warn if they have started voting but haven't completed
       if (ballotData && voteSubmitted !== 'true') {
@@ -82,7 +83,7 @@ export default function Vote() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, []);
+  }, [user?.id]);
 
   // Gather device and location information
   useEffect(() => {
@@ -126,12 +127,10 @@ export default function Vote() {
             accuracy: position.coords.accuracy
           });
           setLocationDenied(false);
-          setShowLocationWarning(false);
         },
         (error) => {
           console.log('Location access denied or unavailable:', error);
           setLocationDenied(true);
-          setShowLocationWarning(true);
         }
       );
 
@@ -144,12 +143,10 @@ export default function Vote() {
             accuracy: position.coords.accuracy
           });
           setLocationDenied(false);
-          setShowLocationWarning(false);
         },
         (error) => {
           console.log('Location tracking error:', error);
           setLocationDenied(true);
-          setShowLocationWarning(true);
         },
         {
           enableHighAccuracy: true,
@@ -450,44 +447,10 @@ export default function Vote() {
   }
 
   return (
-    <>
-      {showLocationWarning && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 border-[3px] border-red-500 shadow-[0_20px_60px_rgba(220,38,38,0.4)] p-8 rounded-lg animate-in zoom-in duration-300">
-            <div className="text-center space-y-4">
-              <div className="text-5xl animate-pulse">🚨</div>
-              <h2 className="text-2xl font-bold text-red-600 dark:text-red-400">Location Turned Off!</h2>
-              <p className="text-gray-700 dark:text-gray-300 font-semibold">
-                Your location has been disabled. Your votes will be marked as <span className="font-bold text-red-600">INVALID</span> without location verification.
-              </p>
-              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 p-4 rounded-lg">
-                <p className="text-sm text-red-800 dark:text-red-300 font-medium">
-                  ⚠️ Please turn on your device location to ensure your vote is counted as valid.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 pt-4">
-                <button
-                  onClick={() => setShowLocationWarning(false)}
-                  className="px-6 py-3 text-base font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
-                  Continue Without Location (Invalid Vote)
-                </button>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="text-gray-600 dark:text-gray-400 hover:underline text-sm font-medium"
-                >
-                  Refresh to Enable Location
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      <BallotContainer 
-        positions={positions}
-        onVotePosition={handleVotePosition}
-        onVoteComplete={handleVoteComplete}
-      />
-    </>
+    <BallotContainer 
+      positions={positions}
+      onVotePosition={handleVotePosition}
+      onVoteComplete={handleVoteComplete}
+    />
   );
 }

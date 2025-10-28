@@ -28,6 +28,52 @@ interface BallotContainerProps {
   onVoteComplete: (votes: Record<string, string>) => void;
 }
 
+// Optimized animation variants using GPU-accelerated properties only
+const animationVariants = [
+  {
+    name: 'slide',
+    initial: { opacity: 0, x: 100 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -100 },
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as any }
+  },
+  {
+    name: 'bounce',
+    initial: { opacity: 0, y: 40, scale: 0.9 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: -40, scale: 0.9 },
+    transition: { duration: 0.4, ease: [0.34, 1.56, 0.64, 1] as any }
+  },
+  {
+    name: 'flip',
+    initial: { opacity: 0, rotateY: 45, scale: 0.9 },
+    animate: { opacity: 1, rotateY: 0, scale: 1 },
+    exit: { opacity: 0, rotateY: -45, scale: 0.9 },
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as any }
+  },
+  {
+    name: 'zoom',
+    initial: { opacity: 0, scale: 0.5 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 1.2 },
+    transition: { duration: 0.4, ease: [0.34, 1.56, 0.64, 1] as any }
+  },
+  {
+    name: 'swipe',
+    initial: { opacity: 0, x: -100, rotate: -5 },
+    animate: { opacity: 1, x: 0, rotate: 0 },
+    exit: { opacity: 0, x: 100, rotate: 5 },
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as any }
+  },
+  {
+    name: 'fade',
+    initial: { opacity: 0, scale: 0.95 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 },
+    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as any }
+  }
+];
+
 export function BallotContainer({ 
   positions, 
   onVotePosition, 
@@ -39,13 +85,25 @@ export function BallotContainer({
   const [isExiting, setIsExiting] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [currentAnimation, setCurrentAnimation] = useState(animationVariants[0]);
 
   const totalPositions = positions.length;
   const currentPosition = positions[currentPositionIndex];
 
-  // Restore session if available
+  // Get user ID on mount for user-specific storage keys
   useEffect(() => {
-    const savedData = sessionStorage.getItem('ballotData');
+    const studentId = localStorage.getItem('studentId');
+    const teacherId = localStorage.getItem('teacherId');
+    const adminId = localStorage.getItem('adminId');
+    setUserId(studentId || teacherId || adminId);
+  }, []);
+
+  // Restore session if available (user-specific)
+  useEffect(() => {
+    if (!userId) return;
+    
+    const savedData = sessionStorage.getItem(`ballotData_${userId}`);
     if (savedData) {
       try {
         const data = JSON.parse(savedData);
@@ -62,12 +120,13 @@ export function BallotContainer({
         console.error('Failed to restore session:', e);
       }
     }
-  }, [positions]);
+  }, [positions, userId]);
 
-  // Save to session storage
+  // Save to session storage (user-specific)
   useEffect(() => {
-    sessionStorage.setItem('ballotData', JSON.stringify({ selections, locked }));
-  }, [selections, locked]);
+    if (!userId) return;
+    sessionStorage.setItem(`ballotData_${userId}`, JSON.stringify({ selections, locked }));
+  }, [selections, locked, userId]);
 
   const handleSelectCandidate = (candidateId: string) => {
     if (locked[currentPosition.id]) return;
@@ -105,9 +164,12 @@ export function BallotContainer({
     setIsExiting(true);
     
     setTimeout(() => {
+      // Pick a random animation for the next position
+      const randomAnimation = animationVariants[Math.floor(Math.random() * animationVariants.length)];
+      setCurrentAnimation(randomAnimation);
       setCurrentPositionIndex(prev => prev + 1);
       setIsExiting(false);
-    }, 400);
+    }, 300);
   };
 
   const handleFinalSubmit = () => {
@@ -115,7 +177,9 @@ export function BallotContainer({
     setShowSuccess(true);
     
     setTimeout(() => {
-      sessionStorage.setItem('voteSubmitted', 'true');
+      if (userId) {
+        sessionStorage.setItem(`voteSubmitted_${userId}`, 'true');
+      }
       onVoteComplete(selections);
     }, 2000);
   };
@@ -164,22 +228,44 @@ export function BallotContainer({
     <>
       <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center p-5">
         <motion.div 
-          className="max-w-[800px] w-full bg-[#fdfcf8] border-[3px] border-[#2c3e50] shadow-[0_20px_60px_rgba(0,0,0,0.3),inset_0_0_50px_rgba(0,0,0,0.02)]"
+          className="max-w-[800px] w-full bg-[#fdfcf8] border-[3px] border-[#2c3e50] shadow-[0_20px_60px_rgba(0,0,0,0.3),inset_0_0_50px_rgba(0,0,0,0.02)] relative overflow-hidden"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <BallotHeader />
+          {/* Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <div 
+              className="text-[180px] md:text-[240px] tracking-wider rotate-[-45deg]"
+              style={{ 
+                fontFamily: "'Courier New', Courier, monospace",
+                color: '#9ca3af',
+                opacity: 0.15,
+                fontWeight: 900,
+                WebkitTextStroke: '2px rgba(156, 163, 175, 0.2)'
+              }}
+            >
+              GEC
+            </div>
+          </div>
+          
+          <div className="relative z-10">
+            <BallotHeader />
           
           <div className="px-6 py-10 md:px-10 md:py-12 min-h-[500px] bg-[repeating-linear-gradient(0deg,transparent,transparent_30px,rgba(0,0,0,0.02)_30px,rgba(0,0,0,0.02)_31px)]">
             <AnimatePresence mode="wait">
               {!showReview && currentPosition && (
                 <motion.div
                   key={currentPositionIndex}
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: isExiting ? 0.4 : 0.5, ease: [0.4, 0, 0.2, 1] }}
+                  initial={currentAnimation.initial}
+                  animate={currentAnimation.animate}
+                  exit={currentAnimation.exit}
+                  transition={currentAnimation.transition}
+                  style={{ 
+                    willChange: 'transform, opacity',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden'
+                  }}
                 >
                   <PositionBallot
                     position={currentPosition}
@@ -202,12 +288,13 @@ export function BallotContainer({
             />
           </div>
 
-          <BallotFooter
-            totalPositions={totalPositions}
-            currentPosition={currentPositionIndex}
-            showSubmit={false}
-            onSubmit={handleFinalSubmit}
-          />
+            <BallotFooter
+              totalPositions={totalPositions}
+              currentPosition={currentPositionIndex}
+              showSubmit={false}
+              onSubmit={handleFinalSubmit}
+            />
+          </div>
         </motion.div>
       </div>
     </>
