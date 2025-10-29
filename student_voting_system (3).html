@@ -6,7 +6,388 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Electoral Results</title>
     <style>
-        * {
+        /* Modal Styles */
+.fullscreen-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: modalFadeIn 0.5s ease-in-out;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+        .fullscreen-modal.active {
+            display: flex;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes modalFadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        .modal-content {
+    width: 95%;
+    max-width: 1400px;
+    max-height: 85vh;
+    background: white;
+    border-radius: 15px;
+    padding: 15px 25px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    margin: auto;
+}
+
+/* Reduce header sizes slightly for better fit */
+.modal-header {
+    text-align: center;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 3px;
+}
+
+.modal-header .position-title {
+    font-size: 1.3rem;
+    color: #667eea;
+    font-weight: 600;
+}
+
+
+.modal-candidates {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.modal-candidate-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+}
+
+        .modal-candidate-section.winner {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);
+            border: 2px solid gold;
+        }
+
+        .modal-candidate-section.last {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            border: 2px solid #999;
+        }
+
+        .modal-candidate-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .modal-candidate-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+/* Adjust photo size for better balance */
+.modal-photo-container {
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    position: relative;
+    background: #f0f0f0;
+}
+
+.modal-photo-container .initials {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+        .modal-photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-details {
+    flex: 1;
+    max-width: 600px;
+}
+
+        .modal-rank-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+        .winner .modal-rank-badge {
+            background: gold;
+            color: #333;
+        }
+
+        .last .modal-rank-badge {
+            background: #666;
+            color: white;
+        }
+        .modal-candidate-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modal-vote-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+        .modal-vote-row:last-child {
+            border-bottom: none;
+        }
+
+        .modal-vote-row.total {
+            border-top: 2px solid #333;
+            margin-top: 5px;
+            padding-top: 8px;
+            font-weight: bold;
+        }
+
+/* Adjust vote text sizes */
+.modal-vote-label {
+    font-size: 1rem;
+    color: #555;
+    white-space: nowrap;
+}
+
+.modal-vote-row.total .modal-vote-label {
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.modal-vote-count {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.modal-vote-row.total .modal-vote-count {
+    font-size: 1.4rem;
+    color: #333;
+}
+
+/* Increase celebration GIF size */
+.modal-celebration {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-celebration img {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+}      .winner-crown {
+            font-size: 2rem;
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .modal-countdown {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        @media (max-width: 1024px) {
+            .modal-candidate-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .modal-celebration {
+                width: 150px;
+                height: 150px;
+                margin: 0 auto;
+            }
+
+            .modal-photo-container {
+                width: 80px;
+                height: 80px;
+            }
+
+            .modal-candidate-name {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 10px 15px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.4rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 1rem;
+            }
+
+            .modal-candidate-info {
+                flex-direction: row;
+                gap: 15px;
+            }
+
+            .modal-photo-container {
+                width: 70px;
+                height: 70px;
+            }
+
+            .modal-candidate-name {
+                font-size: 1.1rem;
+            }
+
+            .modal-vote-row {
+                padding: 4px 0;
+            }
+
+            .modal-vote-label {
+                font-size: 0.85rem;
+            }
+
+            .modal-vote-count {
+                font-size: 0.95rem;
+            }
+
+            .modal-celebration {
+                width: 120px;
+                height: 120px;
+            }
+
+            .modal-candidate-section {
+    background: white;
+    border-radius: 12px;
+    padding: 15px 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+}
+        }
+        /* Add this CSS for the skip button: */
+.modal-skip {
+    position: absolute;
+    top: 10px;
+    right: 70px;
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #667eea;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.modal-skip:hover {
+    background: #667eea;
+    color: white;
+    transform: scale(1.05);
+}
+/* Add confetti CSS styles */
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    z-index: 1;
+    animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(0) rotateZ(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotateZ(720deg);
+        opacity: 0;
+    }
+}
+* {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -925,9 +1306,52 @@
                 opacity: 0;
             }
         }
+/* Add new styles for the large photo container */
+.modal-photo-container-large {
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid gold;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    background: #f0f0f0;
+}
+
+.modal-photo-container-large .initials {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.modal-photo-container-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
     </style>
 </head>
 <body>
+    <!-- Fullscreen Modal -->
+<div class="fullscreen-modal" id="fullscreenModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🐐 THE G.O.A.T</h2>
+            <p style="font-size: 0.9rem; color: #999; margin: 5px 0;">Greatest of All Time</p>
+            <p class="position-title" id="modalPositionTitle"></p>
+        </div>
+        <div class="modal-candidates" id="modalCandidates">
+            <!-- Candidates will be injected here -->
+        </div>
+    </div>
+</div>
     <div class="filter-section" id="filterSection">
         <div class="filter-controls">
             <select class="position-select" id="positionFilter">
@@ -1458,6 +1882,10 @@
         let currentPage = 0;
         let isTransitioning = false;
         let autoScrollTimer;
+        let modalTimer;
+        let modalCountdownTimer;
+        let modalCountdown = 10;
+        let showingModal = false;
 
         const transitions = [
             { in: 'slideInRight', out: 'slideOutLeft' },
@@ -1605,6 +2033,122 @@
             });
         }
 
+// Add this confetti function before the showModal function:
+function createConfetti() {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+    const confettiCount = 150;
+    const container = document.getElementById('fullscreenModal');
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        container.appendChild(confetti);
+        
+        // Remove confetti after animation
+        setTimeout(() => {
+            confetti.remove();
+        }, 5000);
+    }
+}
+
+// Add this function to animate modal vote counts:
+function animateModalVotes() {
+    const modal = document.getElementById('fullscreenModal');
+    const voteCountElements = modal.querySelectorAll('.modal-vote-count');
+    
+    voteCountElements.forEach((element, index) => {
+        const targetVotes = parseInt(element.textContent.replace(/,/g, ''));
+        element.textContent = '0';
+        
+        setTimeout(() => {
+            animateCount(element, 0, targetVotes, 1500);
+        }, index * 150);
+    });
+}
+
+// Update the showModal function to call animateModalVotes after displaying the modal:
+function showModal(pageIndex) {
+    if (pages.length === 0 || pages[pageIndex].candidates.length < 2) return;
+    
+    showingModal = true;
+    const page = pages[pageIndex];
+    const modal = document.getElementById('fullscreenModal');
+    const modalCandidates = document.getElementById('modalCandidates');
+    const modalPositionTitle = document.getElementById('modalPositionTitle');
+    
+    const firstCandidate = page.candidates[0];
+    
+    modalPositionTitle.textContent = page.title;
+    
+    modalCandidates.innerHTML = `
+        <!-- Winner Section -->
+        <div class="modal-candidate-section winner">
+            <div class="modal-candidate-grid">
+                <div class="modal-details">
+                    <div class="modal-rank-badge">🥇 Winner</div>
+                    <h3 class="modal-candidate-name">${firstCandidate.name}</h3>
+                    <div class="modal-vote-row">
+                        <span class="modal-vote-label">Online Votes:</span>
+                        <span class="modal-vote-count">${firstCandidate.onlineVotes.toLocaleString()}</span>
+                    </div>
+                    <div class="modal-vote-row">
+                        <span class="modal-vote-label">Physical Votes:</span>
+                        <span class="modal-vote-count">${firstCandidate.physicalVotes.toLocaleString()}</span>
+                    </div>
+                    <div class="modal-vote-row total">
+                        <span class="modal-vote-label">Total Votes:</span>
+                        <span class="modal-vote-count">${firstCandidate.votes.toLocaleString()}</span>
+                    </div>
+                </div>
+                <div class="modal-photo-container-large">
+                    <span class="initials">${firstCandidate.initials}</span>
+                    <img src="${firstCandidate.photoUrl}" alt="${firstCandidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.add('active');
+    
+    // Create confetti effect
+    setTimeout(() => {
+        createConfetti();
+    }, 100);
+    
+    // Animate vote counts in modal
+    setTimeout(() => {
+        animateModalVotes();
+    }, 300);
+    
+    clearTimeout(modalTimer);
+    clearInterval(modalCountdownTimer);
+    
+    modalTimer = setTimeout(() => {
+        hideModal();
+    }, 10000);
+}
+
+
+        function hideModal() {
+            const modal = document.getElementById('fullscreenModal');
+            modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                modal.classList.remove('active');
+                modal.style.animation = '';
+                showingModal = false;
+                
+                // Move to next page after modal closes
+                setTimeout(() => {
+                    nextPage();
+                }, 500);
+            }, 500);
+        }
+
         function initializePages() {
             if (pages.length === 0) return;
 
@@ -1631,29 +2175,31 @@
 
             setTimeout(() => {
                 animatePageCounts(0);
+                // Show modal for first page after 10 seconds
+                setTimeout(() => {
+                    showModal(0);
+                }, 10000);
             }, 100);
         }
 
         function startAutoScroll() {
             clearInterval(autoScrollTimer);
-            autoScrollTimer = setInterval(() => {
-                nextPage();
-            }, 10000);
+            // No auto scroll - modal handles transitions
         }
 
         function nextPage() {
-            if (pages.length === 0) return;
+            if (pages.length === 0 || showingModal) return;
             const nextPageIndex = (currentPage + 1) % pages.length;
-            goToPage(nextPageIndex);
+            goToPage(nextPageIndex, true);
         }
 
         function previousPage() {
-            if (pages.length === 0) return;
+            if (pages.length === 0 || showingModal) return;
             const prevPageIndex = (currentPage - 1 + pages.length) % pages.length;
-            goToPage(prevPageIndex);
+            goToPage(prevPageIndex, false);
         }
 
-        function goToPage(pageIndex) {
+        function goToPage(pageIndex, showModalAfter = true) {
             if (isTransitioning || pageIndex === currentPage || pages.length === 0) return;
             
             isTransitioning = true;
@@ -1694,9 +2240,14 @@
                 document.querySelectorAll('.page-btn').forEach((btn, index) => {
                     btn.classList.toggle('active', index === pageIndex);
                 });
+                
+                // Show modal after 10 seconds on new page
+                if (showModalAfter) {
+                    setTimeout(() => {
+                        showModal(pageIndex);
+                    }, 10000);
+                }
             }, 100);
-            
-            startAutoScroll();
         }
 
         function populateFilterDropdown() {
@@ -1721,6 +2272,8 @@
 
         function filterByPosition(positionName) {
             clearInterval(autoScrollTimer);
+            clearTimeout(modalTimer);
+            clearInterval(modalCountdownTimer);
             pages = allPages.filter(page => page.title === positionName);
             currentPage = 0;
             initializePages();
@@ -1728,6 +2281,8 @@
 
         function showAllPositions() {
             document.getElementById('positionFilter').value = '';
+            clearTimeout(modalTimer);
+            clearInterval(modalCountdownTimer);
             pages = [...allPages];
             currentPage = 0;
             initializePages();
@@ -1783,7 +2338,7 @@
         });
 
         document.addEventListener('keydown', e => {
-            if (pages.length === 0) return;
+            if (pages.length === 0 || showingModal) return;
             if (e.key === 'ArrowLeft') previousPage();
             if (e.key === 'ArrowRight') nextPage();
         });
@@ -1792,6 +2347,7 @@
         let touchEndX = 0;
 
         function handleSwipe() {
+            if (showingModal) return;
             const swipeThreshold = 50;
             if (touchEndX < touchStartX - swipeThreshold) {
                 nextPage();
