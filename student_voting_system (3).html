@@ -23,7 +23,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
             color: #fff;
             overflow-x: hidden;
             -webkit-text-size-adjust: 100%;
@@ -32,18 +32,18 @@
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             animation: fadeInDown 0.8s ease;
         }
 
         .header h1 {
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-            margin-bottom: 8px;
+            font-size: clamp(1.3rem, 3.5vw, 2rem);
+            margin-bottom: 4px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header .post-name {
-            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            font-size: clamp(0.85rem, 2vw, 1rem);
             opacity: 0.9;
             font-weight: 300;
         }
@@ -57,7 +57,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             padding: 10px;
-            padding-top: 30px;
+            padding-top: 10px;
         }
 
         .candidate-card {
@@ -275,11 +275,11 @@
             display: flex;
             gap: 12px;
             background: rgba(255,255,255,0.15);
-            padding: 12px 20px;
+            padding: 8px 15px;
             border-radius: 30px;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            margin: 30px auto;
+            margin: 15px auto;
             max-width: fit-content;
         }
 
@@ -314,19 +314,17 @@
 
         .filter-section {
             text-align: center;
-            margin: 30px auto;
+            margin: 10px auto;
             max-width: 600px;
             background: rgba(255,255,255,0.15);
-            padding: 25px;
+            padding: 12px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
         .filter-section h3 {
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-            color: white;
+            display: none;
         }
 
         .filter-controls {
@@ -339,13 +337,13 @@
 
         .position-select {
             flex: 1;
-            min-width: 250px;
-            padding: 12px 20px;
+            min-width: 200px;
+            padding: 10px 15px;
             border-radius: 25px;
             border: 2px solid rgba(255,255,255,0.5);
             background: rgba(255,255,255,0.2);
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -361,12 +359,12 @@
         }
 
         .show-all-btn {
-            padding: 12px 30px;
+            padding: 10px 25px;
             border-radius: 25px;
             border: 2px solid rgba(255,255,255,0.5);
             background: linear-gradient(135deg, #43e97b, #38f9d7);
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -866,7 +864,6 @@
 </head>
 <body>
     <div class="filter-section" id="filterSection">
-        <h3>🔍 Filter by Position</h3>
         <div class="filter-controls">
             <select class="position-select" id="positionFilter">
                 <option value="">All Positions</option>
@@ -888,30 +885,41 @@
     <script>
         // Hardcoded electoral data
         const ELECTORAL_DATA = {
-  "total_positions": 14,
-  "total_votes_across_all_positions": 7790,
-  "positions": [
+            "total_positions": 3,
+            "total_votes_across_all_positions": 1666,
+            "positions": [
     {
       "position": "ACADEMIC PREFECT",
       "total_votes_cast": 557,
       "total_candidates": 4,
       "candidates": [
         {
+          "candidate_id": "12e2fdb3-c109-4b74-8036-044e4c641861",
           "candidate_name": "MUGARURA PAXTON",
-          "total_votes": 220
-
+          "total_votes": 220,
+          "valid_votes": 184,
+          "invalid_votes": 36
         },
         {
+          "candidate_id": "f6216054-9161-441c-a139-be2f39959428",
           "candidate_name": "MIREMBE GIFT REBECCA",
-          "total_votes": 145
+          "total_votes": 145,
+          "valid_votes": 119,
+          "invalid_votes": 26
         },
         {
+          "candidate_id": "037a1b56-8cf1-44d2-af2f-f7bd4bc99dfb",
           "candidate_name": "NAYIGA SHUDAT ZAHARA",
-          "total_votes": 96
+          "total_votes": 96,
+          "valid_votes": 83,
+          "invalid_votes": 13
         },
         {
+          "candidate_id": "7c859c8b-7f7c-478e-917c-915d0f805fa4",
           "candidate_name": "NAMMANDA HAIFA",
-          "total_votes": 96
+          "total_votes": 96,
+          "valid_votes": 82,
+          "invalid_votes": 14
         }
       ]
     },
@@ -921,20 +929,32 @@
       "total_candidates": 4,
       "candidates": [
         {
+          "candidate_id": "11fe0e24-9857-4961-89f3-9eb6d69edf26",
           "candidate_name": "SSEMOMBWE ANDERSON",
-          "total_votes": 204
+          "total_votes": 204,
+          "valid_votes": 190,
+          "invalid_votes": 14
         },
         {
+          "candidate_id": "c07dc678-06ac-4529-b774-3a9f09e4db11",
           "candidate_name": "KASULE ELSEN ZAWADI",
-          "total_votes": 128
+          "total_votes": 128,
+          "valid_votes": 116,
+          "invalid_votes": 12
         },
         {
+          "candidate_id": "49e495b6-18ec-400a-94d5-f358cc460533",
           "candidate_name": "NIMUKUNDA CYRUS",
-          "total_votes": 127
+          "total_votes": 127,
+          "valid_votes": 120,
+          "invalid_votes": 7
         },
         {
+          "candidate_id": "a8adf432-418d-42c9-a819-e8f1f24f4f9d",
           "candidate_name": "NAKALUNGI GABRIELLA IVANNAH",
-          "total_votes": 92
+          "total_votes": 92,
+          "valid_votes": 84,
+          "invalid_votes": 8
         }
       ]
     },
@@ -944,12 +964,18 @@
       "total_candidates": 4,
       "candidates": [
         {
+          "candidate_id": "ec5958c5-5e1a-46bd-94b6-338dbf67f1ad",
           "candidate_name": "AMODING DORCAS LAURETTA",
-          "total_votes": 265
+          "total_votes": 265,
+          "valid_votes": 238,
+          "invalid_votes": 27
         },
         {
+          "candidate_id": "bc4e1485-57ea-457e-bf36-1563d2e1312a",
           "candidate_name": "NAMUBIRU AFRICA RACHEAL",
-          "total_votes": 125
+          "total_votes": 125,
+          "valid_votes": 116,
+          "invalid_votes": 9
         },
         {
           "candidate_id": "77b6656e-2abd-4e44-978b-b229aad981e1",
@@ -1383,7 +1409,26 @@
             return name.split(' ').map(word => word[0]).join('').substring(0, 2);
         }
 
-        function getCandidatePhotoUrl(name) {
+        function getCandidatePhotoUrl(candidateId, name) {
+            // Special case mappings for candidates with specific photo URLs based on candidate_id
+            const specialCases = {
+                '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG', // KAWEESA KIERAN
+                'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG', // KAJJUMBA BELLA
+                '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG', // NIMUKUNDA CYRUS (mapped as NDAGIRE SARAH based on position)
+                '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG', // NANUNGI DRUCILLA LUTEETE
+                '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG', // NAMALA SALSABEL
+                '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG', // CHOL GAI
+                'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg', // KALIBBALA JANAT
+                '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg', // NAKASUJJA SHANNAH
+                'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG' // WASAJJA DICKENS CHARLES
+            };
+             
+            // Check for special case by candidate_id first
+            if (candidateId && specialCases[candidateId]) {
+                return specialCases[candidateId];
+            }
+            
+            // Default URL generation
             const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
             const encodedName = encodeURIComponent(name);
             return `${baseUrl}/${encodedName}.JPG`;
@@ -1588,7 +1633,7 @@
                     name: candidate.candidate_name,
                     votes: candidate.total_votes,
                     initials: getInitials(candidate.candidate_name),
-                    photoUrl: getCandidatePhotoUrl(candidate.candidate_name)
+                    photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
                 }));
 
                 return {
