@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Live Electoral Results</title>
+    <title>Electoral Results</title>
     <style>
         * {
             margin: 0;
@@ -47,8 +47,6 @@
             opacity: 0.9;
             font-weight: 300;
         }
-
-
 
         .results-container {
             max-width: 1000px;
@@ -211,13 +209,18 @@
         .candidate-name {
             font-size: 1rem;
             font-weight: 700;
-            color: #2d3748;
+            color: #1a202c;
             margin-bottom: 2px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 100%;
         }
 
         .votes-display {
-            background: rgba(102,126,234,0.15);
-            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 15px;
             border-radius: 12px;
             width: 100%;
             margin-top: auto;
@@ -225,50 +228,49 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .candidate-card.position-1 .votes-display {
-            background: linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,107,53,0.2) 100%);
-            border: 2px solid rgba(255,215,0,0.4);
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255,215,0,0.5);
         }
 
         .candidate-card.position-2 .votes-display {
-            background: linear-gradient(135deg, rgba(79,172,254,0.3) 0%, rgba(0,242,254,0.2) 100%);
-            border: 2px solid rgba(79,172,254,0.4);
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(79,172,254,0.5);
         }
 
         .candidate-card.position-3 .votes-display {
-            background: linear-gradient(135deg, rgba(240,147,251,0.3) 0%, rgba(245,87,108,0.2) 100%);
-            border: 2px solid rgba(240,147,251,0.4);
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(240,147,251,0.5);
         }
 
         .votes-label {
             font-size: 0.7rem;
-            color: #a0aec0;
+            color: #5a6370;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
         .votes-count {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: bold;
-            color: #667eea;
+            color: #2d3748;
             animation: countUp 0.5s ease;
         }
 
         .candidate-card.position-1 .votes-count {
-            color: #FF6B35;
-            text-shadow: 0 0 6px rgba(255,215,0,0.3);
+            color: #2d3748;
         }
 
         .candidate-card.position-2 .votes-count {
-            color: #00f2fe;
-            text-shadow: 0 0 6px rgba(79,172,254,0.3);
+            color: #2d3748;
         }
 
         .candidate-card.position-3 .votes-count {
-            color: #f5576c;
-            text-shadow: 0 0 6px rgba(240,147,251,0.3);
+            color: #2d3748;
         }
 
         .pagination {
@@ -488,10 +490,11 @@
             
             .candidate-name {
                 font-size: 1.4rem;
+                padding: 12px 16px;
             }
             
             .votes-count {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
             
             .votes-label {
@@ -555,10 +558,11 @@
             .candidate-name {
                 font-size: 2rem;
                 margin-bottom: 10px;
+                padding: 15px 20px;
             }
             
             .votes-count {
-                font-size: 2.5rem;
+                font-size: 2.8rem;
             }
             
             .votes-label {
@@ -620,8 +624,6 @@
                 opacity: 1;
             }
         }
-
-
 
         @keyframes shimmer {
             0%, 100% { 
@@ -1410,25 +1412,22 @@
         }
 
         function getCandidatePhotoUrl(candidateId, name) {
-            // Special case mappings for candidates with specific photo URLs based on candidate_id
             const specialCases = {
-                '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG', // KAWEESA KIERAN
-                'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG', // KAJJUMBA BELLA
-                '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG', // NIMUKUNDA CYRUS (mapped as NDAGIRE SARAH based on position)
-                '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG', // NANUNGI DRUCILLA LUTEETE
-                '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG', // NAMALA SALSABEL
-                '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG', // CHOL GAI
-                'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg', // KALIBBALA JANAT
-                '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg', // NAKASUJJA SHANNAH
-                'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG' // WASAJJA DICKENS CHARLES
+                '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG',
+                'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG',
+                '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG',
+                '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG',
+                '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG',
+                '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG',
+                'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg',
+                '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg',
+                'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG'
             };
              
-            // Check for special case by candidate_id first
             if (candidateId && specialCases[candidateId]) {
                 return specialCases[candidateId];
             }
             
-            // Default URL generation
             const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
             const encodedName = encodeURIComponent(name);
             return `${baseUrl}/${encodedName}.JPG`;
@@ -1530,7 +1529,7 @@
             clearInterval(autoScrollTimer);
             autoScrollTimer = setInterval(() => {
                 nextPage();
-            }, 15000); // 15 seconds for better TV viewing
+            }, 15000);
         }
 
         function nextPage() {
@@ -1649,7 +1648,6 @@
             console.log(`Loaded ${ELECTORAL_DATA.total_positions} positions with ${ELECTORAL_DATA.total_votes_across_all_positions} total votes`);
         }
 
-        // Prevent sleep/screensaver on smart TVs
         function keepAwake() {
             if ('wakeLock' in navigator) {
                 navigator.wakeLock.request('screen').catch(err => {
@@ -1658,7 +1656,6 @@
             }
         }
 
-        // Preload images for smoother transitions
         function preloadImages() {
             allPages.forEach(page => {
                 page.candidates.forEach(candidate => {
