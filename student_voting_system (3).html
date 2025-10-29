@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Live Electoral Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .post-name {
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+
+
+        .results-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 10px;
+            padding-top: 30px;
+        }
+
+        .candidate-card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 15px;
+            padding: 15px 12px;
+            padding-top: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .candidate-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .candidate-card.position-1::before {
+            background: linear-gradient(90deg, #FFD700, #FF6B35, #F7931E);
+            animation: shimmer 3s ease-in-out infinite;
+            background-size: 200% 100%;
+        }
+
+        .candidate-card.position-1 {
+            background: linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,107,53,0.15) 50%, rgba(255,255,255,0.98) 100%);
+            box-shadow: 0 10px 25px rgba(255,215,0,0.3), 0 0 15px rgba(255,107,53,0.2);
+        }
+
+        .candidate-card.position-2::before {
+            background: linear-gradient(90deg, #4facfe, #00f2fe, #43e97b);
+        }
+
+        .candidate-card.position-2 {
+            background: linear-gradient(135deg, rgba(79,172,254,0.25) 0%, rgba(0,242,254,0.15) 50%, rgba(255,255,255,0.98) 100%);
+            box-shadow: 0 10px 25px rgba(79,172,254,0.3), 0 0 15px rgba(0,242,254,0.2);
+        }
+
+        .candidate-card.position-3::before {
+            background: linear-gradient(90deg, #f093fb, #f5576c, #fa709a);
+        }
+
+        .candidate-card.position-3 {
+            background: linear-gradient(135deg, rgba(240,147,251,0.25) 0%, rgba(245,87,108,0.15) 50%, rgba(255,255,255,0.98) 100%);
+            box-shadow: 0 10px 25px rgba(240,147,251,0.3), 0 0 15px rgba(245,87,108,0.2);
+        }
+
+        .candidate-card.position-4::before,
+        .candidate-card.position-5::before,
+        .candidate-card.position-6::before {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .candidate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        }
+
+        .crown-emoji {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+            z-index: 10;
+        }
+
+        .photo-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            margin-bottom: 6px;
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .photo-container .initials {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            display: block;
+        }
+
+        .photo-container img.loaded {
+            z-index: 2;
+        }
+
+        .photo-container img[src]:not([src=""]) {
+            z-index: 2;
+        }
+
+        .photo-container:has(img:not([style*="display: none"])) .initials {
+            display: none;
+        }
+
+        .candidate-card.position-1 .photo-container {
+            border-color: #FFD700;
+            box-shadow: 0 6px 15px rgba(255,215,0,0.4), 0 0 12px rgba(255,107,53,0.2);
+        }
+
+        .candidate-card.position-2 .photo-container {
+            border-color: #4facfe;
+            box-shadow: 0 6px 15px rgba(79,172,254,0.4), 0 0 12px rgba(0,242,254,0.2);
+        }
+
+        .candidate-card.position-3 .photo-container {
+            border-color: #f093fb;
+            box-shadow: 0 6px 15px rgba(240,147,251,0.4), 0 0 12px rgba(245,87,108,0.2);
+        }
+
+        .candidate-card:hover .photo-container {
+            transform: scale(1.05);
+        }
+
+        .candidate-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        .votes-display {
+            background: rgba(102,126,234,0.15);
+            padding: 8px 15px;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .candidate-card.position-1 .votes-display {
+            background: linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,107,53,0.2) 100%);
+            border: 2px solid rgba(255,215,0,0.4);
+        }
+
+        .candidate-card.position-2 .votes-display {
+            background: linear-gradient(135deg, rgba(79,172,254,0.3) 0%, rgba(0,242,254,0.2) 100%);
+            border: 2px solid rgba(79,172,254,0.4);
+        }
+
+        .candidate-card.position-3 .votes-display {
+            background: linear-gradient(135deg, rgba(240,147,251,0.3) 0%, rgba(245,87,108,0.2) 100%);
+            border: 2px solid rgba(240,147,251,0.4);
+        }
+
+        .votes-label {
+            font-size: 0.7rem;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .votes-count {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+            animation: countUp 0.5s ease;
+        }
+
+        .candidate-card.position-1 .votes-count {
+            color: #FF6B35;
+            text-shadow: 0 0 6px rgba(255,215,0,0.3);
+        }
+
+        .candidate-card.position-2 .votes-count {
+            color: #00f2fe;
+            text-shadow: 0 0 6px rgba(79,172,254,0.3);
+        }
+
+        .candidate-card.position-3 .votes-count {
+            color: #f5576c;
+            text-shadow: 0 0 6px rgba(240,147,251,0.3);
+        }
+
+        .pagination {
+            display: flex;
+            gap: 12px;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            margin: 30px auto;
+            max-width: fit-content;
+        }
+
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid transparent;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        .page-btn.active {
+            background: #fff;
+            color: #667eea;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.4);
+            transform: scale(1.15);
+        }
+
+        .filter-section {
+            text-align: center;
+            margin: 30px auto;
+            max-width: 600px;
+            background: rgba(255,255,255,0.15);
+            padding: 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .filter-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .position-select {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .position-select:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.7);
+        }
+
+        .position-select option {
+            background: #667eea;
+            color: white;
+        }
+
+        .show-all-btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.5);
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(67,233,123,0.3);
+        }
+
+        .show-all-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(67,233,123,0.5);
+        }
+
+        .carousel-container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            font-size: 3rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .carousel-nav:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: 20px;
+        }
+
+        .carousel-nav.next {
+            right: 20px;
+        }
+
+        #pagesContainer {
+            position: relative;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .results-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .carousel-nav {
+                width: 50px;
+                height: 50px;
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+
+            .pagination {
+                gap: 8px;
+                padding: 10px 15px;
+            }
+            
+            .carousel-nav {
+                width: 45px;
+                height: 45px;
+                font-size: 2rem;
+            }
+        }
+
+        /* Smart TV optimizations */
+        @media (min-width: 1920px) {
+            body {
+                padding: 40px;
+            }
+            
+            .header h1 {
+                font-size: 3.5rem;
+            }
+            
+            .header .post-name {
+                font-size: 1.8rem;
+            }
+            
+            .results-container {
+                max-width: 1400px;
+                gap: 25px;
+            }
+            
+            .candidate-card {
+                padding: 25px 20px;
+                padding-top: 35px;
+            }
+            
+            .photo-container {
+                width: 120px;
+                height: 120px;
+                font-size: 3rem;
+            }
+            
+            .candidate-name {
+                font-size: 1.4rem;
+            }
+            
+            .votes-count {
+                font-size: 1.8rem;
+            }
+            
+            .votes-label {
+                font-size: 1rem;
+            }
+            
+            .crown-emoji {
+                font-size: 3rem;
+            }
+            
+            .carousel-nav {
+                width: 80px;
+                height: 80px;
+                font-size: 4rem;
+            }
+            
+            .page-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.1rem;
+            }
+            
+            .filter-section,
+            .position-select,
+            .show-all-btn {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (min-width: 3840px) {
+            body {
+                padding: 60px;
+            }
+            
+            .header h1 {
+                font-size: 5rem;
+            }
+            
+            .header .post-name {
+                font-size: 2.5rem;
+            }
+            
+            .results-container {
+                max-width: 2000px;
+                gap: 35px;
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .candidate-card {
+                padding: 35px 30px;
+                padding-top: 50px;
+            }
+            
+            .photo-container {
+                width: 160px;
+                height: 160px;
+                font-size: 4rem;
+                border: 5px solid #667eea;
+            }
+            
+            .candidate-name {
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }
+            
+            .votes-count {
+                font-size: 2.5rem;
+            }
+            
+            .votes-label {
+                font-size: 1.3rem;
+            }
+            
+            .crown-emoji {
+                font-size: 4rem;
+                top: -15px;
+            }
+            
+            .carousel-nav {
+                width: 100px;
+                height: 100px;
+                font-size: 5rem;
+            }
+            
+            .page-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.3rem;
+            }
+            
+            .filter-section h3 {
+                font-size: 2rem;
+                margin-bottom: 25px;
+            }
+            
+            .position-select,
+            .show-all-btn {
+                font-size: 1.5rem;
+                padding: 18px 40px;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        @keyframes countUp {
+            from {
+                transform: scale(1.3);
+                opacity: 0.5;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+
+
+        @keyframes shimmer {
+            0%, 100% { 
+                background-position: 0% 50%;
+            }
+            50% { 
+                background-position: 100% 50%;
+            }
+        }
+
+        .page-content {
+            display: none;
+            animation-duration: 0.8s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            animation-fill-mode: both;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes zoomOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50%);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes bounceOut {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            25% {
+                transform: scale(0.95);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.3) translateY(50%);
+            }
+        }
+
+        @keyframes flipInY {
+            from {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(90deg);
+            }
+            to {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0);
+            }
+        }
+
+        @keyframes flipOutY {
+            from {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(-90deg);
+            }
+        }
+
+        @keyframes flipInX {
+            from {
+                opacity: 0;
+                transform: perspective(1000px) rotateX(90deg);
+            }
+            to {
+                opacity: 1;
+                transform: perspective(1000px) rotateX(0);
+            }
+        }
+
+        @keyframes flipOutX {
+            from {
+                opacity: 1;
+                transform: perspective(1000px) rotateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: perspective(1000px) rotateX(-90deg);
+            }
+        }
+
+        @keyframes swipeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(100%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes swipeOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(100%) scale(0.9);
+            }
+        }
+
+        @keyframes morphIn {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+                border-radius: 50%;
+            }
+            50% {
+                transform: scale(1.1) rotate(-90deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                border-radius: 0;
+            }
+        }
+
+        @keyframes morphOut {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                border-radius: 0;
+            }
+            50% {
+                transform: scale(1.1) rotate(90deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+                border-radius: 50%;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="filter-section" id="filterSection">
+        <h3>🔍 Filter by Position</h3>
+        <div class="filter-controls">
+            <select class="position-select" id="positionFilter">
+                <option value="">All Positions</option>
+            </select>
+            <button class="show-all-btn" onclick="showAllPositions()">
+                Show All
+            </button>
+        </div>
+    </div>
+
+    <div class="carousel-container" id="carouselContainer">
+        <button class="carousel-nav prev" onclick="previousPage()">‹</button>
+        <div id="pagesContainer"></div>
+        <button class="carousel-nav next" onclick="nextPage()">›</button>
+    </div>
+    
+    <div class="pagination" id="pagination"></div>
+
+    <script>
+        // Hardcoded electoral data
+        const ELECTORAL_DATA = {
+  "total_positions": 14,
+  "total_votes_across_all_positions": 7790,
+  "positions": [
+    {
+      "position": "ACADEMIC PREFECT",
+      "total_votes_cast": 557,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_name": "MUGARURA PAXTON",
+          "total_votes": 220
+
+        },
+        {
+          "candidate_name": "MIREMBE GIFT REBECCA",
+          "total_votes": 145
+        },
+        {
+          "candidate_name": "NAYIGA SHUDAT ZAHARA",
+          "total_votes": 96
+        },
+        {
+          "candidate_name": "NAMMANDA HAIFA",
+          "total_votes": 96
+        }
+      ]
+    },
+    {
+      "position": "WELFARE PREFECT  MESS PREFECT ",
+      "total_votes_cast": 551,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_name": "SSEMOMBWE ANDERSON",
+          "total_votes": 204
+        },
+        {
+          "candidate_name": "KASULE ELSEN ZAWADI",
+          "total_votes": 128
+        },
+        {
+          "candidate_name": "NIMUKUNDA CYRUS",
+          "total_votes": 127
+        },
+        {
+          "candidate_name": "NAKALUNGI GABRIELLA IVANNAH",
+          "total_votes": 92
+        }
+      ]
+    },
+    {
+      "position": "HEALTH   SANITATION",
+      "total_votes_cast": 558,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_name": "AMODING DORCAS LAURETTA",
+          "total_votes": 265
+        },
+        {
+          "candidate_name": "NAMUBIRU AFRICA RACHEAL",
+          "total_votes": 125
+        },
+        {
+          "candidate_id": "77b6656e-2abd-4e44-978b-b229aad981e1",
+          "candidate_name": "INEZA PEACE DORIAN",
+          "total_votes": 111,
+          "valid_votes": 96,
+          "invalid_votes": 15
+        },
+        {
+          "candidate_id": "8a14d42f-5320-41b6-b859-d0d978267db9",
+          "candidate_name": "AYEBAREYESU EXCELLENT",
+          "total_votes": 57,
+          "valid_votes": 55,
+          "invalid_votes": 2
+        }
+      ]
+    },
+    {
+      "position": "GAMES AND SPORTS PREFECT",
+      "total_votes_cast": 555,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "a4ee087d-37bf-4317-84c3-4a1a9f1827fb",
+          "candidate_name": "NAMPIIMA PAULINE",
+          "total_votes": 251,
+          "valid_votes": 219,
+          "invalid_votes": 32
+        },
+        {
+          "candidate_id": "7bd0e4ea-5928-49d7-b344-7959cbd53d87",
+          "candidate_name": "SSEKANDI RAMADHAN",
+          "total_votes": 148,
+          "valid_votes": 134,
+          "invalid_votes": 14
+        },
+        {
+          "candidate_id": "e721d219-fc28-4786-9169-cf80f99efb67",
+          "candidate_name": "KEMIGISHA ALEXANDRIA",
+          "total_votes": 114,
+          "valid_votes": 100,
+          "invalid_votes": 14
+        },
+        {
+          "candidate_id": "adf78342-fbe3-4bf7-a2cd-afea3f5618ec",
+          "candidate_name": "NVANUNGI SHANIEZ",
+          "total_votes": 42,
+          "valid_votes": 35,
+          "invalid_votes": 7
+        }
+      ]
+    },
+    {
+      "position": "PREFECT IN CHARGE OF DISCIPLINE",
+      "total_votes_cast": 556,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "ec105766-e320-4321-af3e-3cd5028400e8",
+          "candidate_name": "ALIYAH ADAMS KYEYUNE",
+          "total_votes": 176,
+          "valid_votes": 163,
+          "invalid_votes": 13
+        },
+        {
+          "candidate_id": "288f0c93-ac55-4a91-abfe-ef088e214111",
+          "candidate_name": "AMPUMUZA ELIANAH",
+          "total_votes": 152,
+          "valid_votes": 140,
+          "invalid_votes": 12
+        },
+        {
+          "candidate_id": "397a55c3-db27-49f6-b432-c0f35e340927",
+          "candidate_name": "NAKAWEESI MICHELLE",
+          "total_votes": 141,
+          "valid_votes": 130,
+          "invalid_votes": 11
+        },
+        {
+          "candidate_id": "d6d3cf5a-0051-4bf5-91a3-63bb03456783",
+          "candidate_name": "NAKIREMBEKA RUTH TENDO ESTHER",
+          "total_votes": 87,
+          "valid_votes": 80,
+          "invalid_votes": 7
+        }
+      ]
+    },
+    {
+      "position": "HEAD MONITOR ES ",
+      "total_votes_cast": 558,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "7399d5ba-188e-4ebb-b722-69078283a7b2",
+          "candidate_name": "NANUNGI DRUCILLA LUTEETE",
+          "total_votes": 198,
+          "valid_votes": 176,
+          "invalid_votes": 22
+        },
+        {
+          "candidate_id": "8f3b1b27-b571-4e90-908a-43b70108ebf7",
+          "candidate_name": "BESIGYE TRICIA",
+          "total_votes": 149,
+          "valid_votes": 128,
+          "invalid_votes": 21
+        },
+        {
+          "candidate_id": "2ed41268-bdef-42cc-8f2c-25806c93c03f",
+          "candidate_name": "NAMAZZI DESIRE HILDA",
+          "total_votes": 137,
+          "valid_votes": 127,
+          "invalid_votes": 10
+        },
+        {
+          "candidate_id": "74ac9c3d-b409-459f-a7c0-ac787640b4fd",
+          "candidate_name": "ALIMPA DESTINY ANGELLA",
+          "total_votes": 74,
+          "valid_votes": 68,
+          "invalid_votes": 6
+        }
+      ]
+    },
+    {
+      "position": "PREFECT FOR LOWER SECTION",
+      "total_votes_cast": 557,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "867e02b5-5212-436e-a60b-00d92911e99f",
+          "candidate_name": "ATUKUNDA SALOME",
+          "total_votes": 287,
+          "valid_votes": 261,
+          "invalid_votes": 26
+        },
+        {
+          "candidate_id": "64dd7a65-0c02-4699-a361-b63df52d3589",
+          "candidate_name": "ALINDA TIFFANY",
+          "total_votes": 136,
+          "valid_votes": 126,
+          "invalid_votes": 10
+        },
+        {
+          "candidate_id": "63bbde7f-60f4-432b-8c61-e987c07124fe",
+          "candidate_name": "NAMPIJJA RAHUMAH",
+          "total_votes": 94,
+          "valid_votes": 86,
+          "invalid_votes": 8
+        },
+        {
+          "candidate_id": "70ebb200-3a75-494b-ae8e-f803b48222cf",
+          "candidate_name": "NANTIMBA JULIAN SEKATE",
+          "total_votes": 40,
+          "valid_votes": 35,
+          "invalid_votes": 5
+        }
+      ]
+    },
+    {
+      "position": "PREFECT FOR UPPER SECTION",
+      "total_votes_cast": 558,
+      "total_candidates": 3,
+      "candidates": [
+        {
+          "candidate_id": "77c65296-2605-4b9d-a48b-ac86c96f1b09",
+          "candidate_name": "ASHABA ELIZABETH",
+          "total_votes": 226,
+          "valid_votes": 210,
+          "invalid_votes": 16
+        },
+        {
+          "candidate_id": "5e7db028-8752-4ef6-b877-75b16f71c093",
+          "candidate_name": "KHARUNDA ESTHER",
+          "total_votes": 173,
+          "valid_votes": 155,
+          "invalid_votes": 18
+        },
+        {
+          "candidate_id": "f60ab5ee-28d3-42e6-bee9-d32bd500b45f",
+          "candidate_name": "ATAMBA CAROL JIREH",
+          "total_votes": 159,
+          "valid_votes": 146,
+          "invalid_votes": 13
+        }
+      ]
+    },
+    {
+      "position": "ENTERTAINMENT PREFECT",
+      "total_votes_cast": 557,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "9b305326-35ab-440f-84de-f97ce4f6ebb3",
+          "candidate_name": "NAKITTO RHONEL RUTH",
+          "total_votes": 330,
+          "valid_votes": 285,
+          "invalid_votes": 45
+        },
+        {
+          "candidate_id": "cc1e41ad-90a8-4740-9dd6-ee2c21100a4d",
+          "candidate_name": "WASAJJA CHARLES DICKENS",
+          "total_votes": 112,
+          "valid_votes": 98,
+          "invalid_votes": 14
+        },
+        {
+          "candidate_id": "d4dc551e-2e31-4a4a-82b1-ca65ebe506fe",
+          "candidate_name": "KALIBBALA JANAT",
+          "total_votes": 58,
+          "valid_votes": 47,
+          "invalid_votes": 11
+        },
+        {
+          "candidate_id": "0721ccee-05b5-4909-b1cd-9a87194e5446",
+          "candidate_name": "NAKASUJJA SHANNAH",
+          "total_votes": 57,
+          "valid_votes": 50,
+          "invalid_votes": 7
+        }
+      ]
+    },
+    {
+      "position": "FURNITURE PREFECT S ",
+      "total_votes_cast": 557,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "9df21105-7581-45ee-8ce4-fef62a9677b6",
+          "candidate_name": "MATENYITIA MERCY",
+          "total_votes": 178,
+          "valid_votes": 148,
+          "invalid_votes": 30
+        },
+        {
+          "candidate_id": "1128f604-473a-4c91-b063-9717a8bd2996",
+          "candidate_name": "BUYONDO ISRAEL",
+          "total_votes": 156,
+          "valid_votes": 138,
+          "invalid_votes": 18
+        },
+        {
+          "candidate_id": "4a6b9fc5-4619-4329-b17b-c36f409db58d",
+          "candidate_name": "NTAMBI REAGAN",
+          "total_votes": 153,
+          "valid_votes": 137,
+          "invalid_votes": 16
+        },
+        {
+          "candidate_id": "d0bfe2b8-1651-4229-8b66-77f8d15a6732",
+          "candidate_name": "KIMBUGWE MELVIN ELISHA",
+          "total_votes": 70,
+          "valid_votes": 62,
+          "invalid_votes": 8
+        }
+      ]
+    },
+    {
+      "position": "HEAD PREFECT",
+      "total_votes_cast": 557,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "707be6be-9afb-4e3e-9eeb-9b14c43df9d6",
+          "candidate_name": "BALUKU ELEUTHERIUS BROGAN",
+          "total_votes": 231,
+          "valid_votes": 206,
+          "invalid_votes": 25
+        },
+        {
+          "candidate_id": "c52d4326-b329-471f-a973-a566f030d283",
+          "candidate_name": "NAMATA DIVINE HANNAH",
+          "total_votes": 216,
+          "valid_votes": 198,
+          "invalid_votes": 18
+        },
+        {
+          "candidate_id": "fddcd1af-3477-45b0-a0e5-c9f19a4345be",
+          "candidate_name": "NSUBUGA ERON",
+          "total_votes": 59,
+          "valid_votes": 52,
+          "invalid_votes": 7
+        },
+        {
+          "candidate_id": "e8629458-7717-4afc-8012-887c05763978",
+          "candidate_name": "KAJJUMBA BELLA",
+          "total_votes": 51,
+          "valid_votes": 45,
+          "invalid_votes": 6
+        }
+      ]
+    },
+    {
+      "position": "ICT PREFECT",
+      "total_votes_cast": 560,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "d191dc3a-4e7f-4063-8310-2db636425562",
+          "candidate_name": "NANYUNJA RINAH NANA",
+          "total_votes": 193,
+          "valid_votes": 173,
+          "invalid_votes": 20
+        },
+        {
+          "candidate_id": "8ae99fc2-8ac3-4491-b372-195a862f9888",
+          "candidate_name": "HANNAH FRIEND KIZITO",
+          "total_votes": 142,
+          "valid_votes": 135,
+          "invalid_votes": 7
+        },
+        {
+          "candidate_id": "25ad3083-661d-498a-8a6d-1d1fabe18385",
+          "candidate_name": "OMODING ETHAN EYALAMA",
+          "total_votes": 121,
+          "valid_votes": 109,
+          "invalid_votes": 12
+        },
+        {
+          "candidate_id": "1712fe59-6b20-4157-81d6-bb66a3909afe",
+          "candidate_name": "AHUMUZA PRAISE ROBERT",
+          "total_votes": 104,
+          "valid_votes": 93,
+          "invalid_votes": 11
+        }
+      ]
+    },
+    {
+      "position": "TIME KEEPER",
+      "total_votes_cast": 556,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "827613e8-3d87-4900-8cce-23a238ead93b",
+          "candidate_name": "NAMALA SALSABEL",
+          "total_votes": 259,
+          "valid_votes": 239,
+          "invalid_votes": 20
+        },
+        {
+          "candidate_id": "5bc8f386-b780-4955-9c68-672df6dfd73a",
+          "candidate_name": "ISINGOMA EDGAR",
+          "total_votes": 123,
+          "valid_votes": 114,
+          "invalid_votes": 9
+        },
+        {
+          "candidate_id": "942f7387-a7e7-4b0c-a9f5-04006ed29dd2",
+          "candidate_name": "NDAGIRE SARAH",
+          "total_votes": 96,
+          "valid_votes": 90,
+          "invalid_votes": 6
+        },
+        {
+          "candidate_id": "318e74da-7b00-4482-bf06-0189eef5a874",
+          "candidate_name": "CHOL GAI",
+          "total_votes": 78,
+          "valid_votes": 70,
+          "invalid_votes": 8
+        }
+      ]
+    },
+    {
+      "position": "UNIFORM   UNIFORMITY",
+      "total_votes_cast": 553,
+      "total_candidates": 6,
+      "candidates": [
+        {
+          "candidate_id": "c3107612-2b87-41d9-9e45-e497ffb588f3",
+          "candidate_name": "NAMBUUSI VERONICA NAKATO",
+          "total_votes": 217,
+          "valid_votes": 197,
+          "invalid_votes": 20
+        },
+        {
+          "candidate_id": "93f51074-0cd7-44a1-a361-da2280ac0963",
+          "candidate_name": "MPAIRWE SERENE LYTON",
+          "total_votes": 91,
+          "valid_votes": 86,
+          "invalid_votes": 5
+        },
+        {
+          "candidate_id": "e3a2723e-faa1-4382-8181-22de92cbbc4c",
+          "candidate_name": "NAMUJJUZI WINFRED",
+          "total_votes": 77,
+          "valid_votes": 73,
+          "invalid_votes": 4
+        },
+        {
+          "candidate_id": "1dd36e3b-24e0-4ee8-b289-fa915ee24eb6",
+          "candidate_name": "KAWEESA KIERAN",
+          "total_votes": 58,
+          "valid_votes": 53,
+          "invalid_votes": 5
+        },
+        {
+          "candidate_id": "46b426c3-bd68-4360-a2ac-16dbdb1cb4d6",
+          "candidate_name": "NAKASIISA SHEILLA KABOGGOZA",
+          "total_votes": 56,
+          "valid_votes": 54,
+          "invalid_votes": 2
+        },
+        {
+          "candidate_id": "26659747-902e-484f-a0c0-efa652c59d10",
+          "candidate_name": "AKAMUTUHA JANET",
+          "total_votes": 54,
+          "valid_votes": 49,
+          "invalid_votes": 5
+        }
+      ]
+    }
+  ]
+};
+
+        let pages = [];
+        let allPages = [];
+        let currentPage = 0;
+        let isTransitioning = false;
+        let autoScrollTimer;
+
+        const transitions = [
+            { in: 'slideInRight', out: 'slideOutLeft' },
+            { in: 'slideInLeft', out: 'slideOutRight' },
+            { in: 'bounceIn', out: 'bounceOut' },
+            { in: 'flipInY', out: 'flipOutY' },
+            { in: 'flipInX', out: 'flipOutX' },
+            { in: 'zoomIn', out: 'zoomOut' },
+            { in: 'swipeInUp', out: 'swipeOutDown' },
+            { in: 'morphIn', out: 'morphOut' }
+        ];
+
+        function getInitials(name) {
+            return name.split(' ').map(word => word[0]).join('').substring(0, 2);
+        }
+
+        function getCandidatePhotoUrl(name) {
+            const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
+            const encodedName = encodeURIComponent(name);
+            return `${baseUrl}/${encodedName}.JPG`;
+        }
+
+        function createPageHTML(page, pageIndex) {
+            return `
+                <div class="page-content ${pageIndex === 0 ? 'active' : ''}" data-page="${pageIndex}">
+                    <div class="header">
+                        <h1>🗳️ Online Electoral Results</h1>
+                        <p class="post-name">${page.title}</p>
+                    </div>
+                    <div class="results-container" data-page-index="${pageIndex}">
+                        ${page.candidates.map((candidate, i) => `
+                            <div class="candidate-card position-${i + 1}" data-position="${i + 1}" data-votes="${candidate.votes}">
+                                ${i === 0 ? '<div class="crown-emoji">👑</div>' : ''}
+                                <div class="photo-container">
+                                    <span class="initials">${candidate.initials}</span>
+                                    <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                                </div>
+                                <h3 class="candidate-name">${candidate.name}</h3>
+                                <div class="votes-display">
+                                    <span class="votes-label">Total Votes:</span>
+                                    <span class="votes-count" data-target="${candidate.votes}">0</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function animateCount(element, start, end, duration) {
+            const startTime = Date.now();
+            const range = end - start;
+            
+            function updateCount() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOutQuad = progress * (2 - progress);
+                const current = Math.floor(start + (range * easeOutQuad));
+                
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCount);
+                } else {
+                    element.textContent = end.toLocaleString();
+                }
+            }
+            
+            requestAnimationFrame(updateCount);
+        }
+
+        function animatePageCounts(pageIndex) {
+            const pageContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+            if (!pageContent) return;
+
+            const voteCountElements = pageContent.querySelectorAll('.votes-count');
+            
+            voteCountElements.forEach((element, index) => {
+                const targetVotes = parseInt(element.dataset.target);
+                setTimeout(() => {
+                    animateCount(element, 0, targetVotes, 1500);
+                }, index * 100);
+            });
+        }
+
+        function initializePages() {
+            if (pages.length === 0) return;
+
+            const container = document.getElementById('pagesContainer');
+            const pagination = document.getElementById('pagination');
+            
+            container.innerHTML = pages.map((page, index) => createPageHTML(page, index)).join('');
+            
+            if (pages.length > 1) {
+                pagination.innerHTML = pages.map((_, index) => 
+                    `<button class="page-btn ${index === 0 ? 'active' : ''}" data-page="${index}">${index + 1}</button>`
+                ).join('');
+
+                document.querySelectorAll('.page-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        goToPage(parseInt(btn.dataset.page));
+                    });
+                });
+
+                startAutoScroll();
+            } else {
+                pagination.innerHTML = '';
+            }
+
+            setTimeout(() => {
+                animatePageCounts(0);
+            }, 100);
+        }
+
+        function startAutoScroll() {
+            clearInterval(autoScrollTimer);
+            autoScrollTimer = setInterval(() => {
+                nextPage();
+            }, 15000); // 15 seconds for better TV viewing
+        }
+
+        function nextPage() {
+            if (pages.length === 0) return;
+            const nextPageIndex = (currentPage + 1) % pages.length;
+            goToPage(nextPageIndex);
+        }
+
+        function previousPage() {
+            if (pages.length === 0) return;
+            const prevPageIndex = (currentPage - 1 + pages.length) % pages.length;
+            goToPage(prevPageIndex);
+        }
+
+        function goToPage(pageIndex) {
+            if (isTransitioning || pageIndex === currentPage || pages.length === 0) return;
+            
+            isTransitioning = true;
+            const oldPage = currentPage;
+            const transition = transitions[Math.floor(Math.random() * transitions.length)];
+            
+            const oldContent = document.querySelector(`.page-content[data-page="${oldPage}"]`);
+            const newContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+            
+            const newVoteCounts = newContent.querySelectorAll('.votes-count');
+            newVoteCounts.forEach(count => {
+                count.textContent = '0';
+            });
+            
+            if (oldContent) {
+                oldContent.style.animationName = transition.out;
+                
+                setTimeout(() => {
+                    oldContent.classList.remove('active');
+                    oldContent.style.animationName = '';
+                }, 800);
+            }
+            
+            setTimeout(() => {
+                currentPage = pageIndex;
+                newContent.classList.add('active');
+                newContent.style.animationName = transition.in;
+                
+                setTimeout(() => {
+                    animatePageCounts(pageIndex);
+                }, 300);
+                
+                setTimeout(() => {
+                    newContent.style.animationName = '';
+                    isTransitioning = false;
+                }, 800);
+                
+                document.querySelectorAll('.page-btn').forEach((btn, index) => {
+                    btn.classList.toggle('active', index === pageIndex);
+                });
+            }, 100);
+            
+            startAutoScroll();
+        }
+
+        function populateFilterDropdown() {
+            const select = document.getElementById('positionFilter');
+            select.innerHTML = '<option value="">All Positions</option>';
+            
+            ELECTORAL_DATA.positions.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position.position;
+                option.textContent = `${position.position} (${position.total_votes_cast} votes)`;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    filterByPosition(this.value);
+                } else {
+                    showAllPositions();
+                }
+            });
+        }
+
+        function filterByPosition(positionName) {
+            clearInterval(autoScrollTimer);
+            pages = allPages.filter(page => page.title === positionName);
+            currentPage = 0;
+            initializePages();
+        }
+
+        function showAllPositions() {
+            document.getElementById('positionFilter').value = '';
+            pages = [...allPages];
+            currentPage = 0;
+            initializePages();
+        }
+
+        function loadElectoralData() {
+            console.log('Loading hardcoded electoral data...');
+            
+            allPages = ELECTORAL_DATA.positions.map(position => {
+                const candidates = position.candidates.map(candidate => ({
+                    name: candidate.candidate_name,
+                    votes: candidate.total_votes,
+                    initials: getInitials(candidate.candidate_name),
+                    photoUrl: getCandidatePhotoUrl(candidate.candidate_name)
+                }));
+
+                return {
+                    title: position.position,
+                    candidates: candidates
+                };
+            });
+            
+            pages = [...allPages];
+            populateFilterDropdown();
+            initializePages();
+            
+            console.log(`Loaded ${ELECTORAL_DATA.total_positions} positions with ${ELECTORAL_DATA.total_votes_across_all_positions} total votes`);
+        }
+
+        // Prevent sleep/screensaver on smart TVs
+        function keepAwake() {
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').catch(err => {
+                    console.log('Wake Lock error:', err);
+                });
+            }
+        }
+
+        // Preload images for smoother transitions
+        function preloadImages() {
+            allPages.forEach(page => {
+                page.candidates.forEach(candidate => {
+                    const img = new Image();
+                    img.src = candidate.photoUrl;
+                });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            loadElectoralData();
+            keepAwake();
+            setTimeout(preloadImages, 1000);
+        });
+
+        document.addEventListener('keydown', e => {
+            if (pages.length === 0) return;
+            if (e.key === 'ArrowLeft') previousPage();
+            if (e.key === 'ArrowRight') nextPage();
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextPage();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                previousPage();
+            }
+        }
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+    </script>
+</body>
+</html>
