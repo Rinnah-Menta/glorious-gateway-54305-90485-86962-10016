@@ -6,22 +6,46 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Electoral Results</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
+        }
+
         /* Modal Styles */
-.fullscreen-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    animation: modalFadeIn 0.5s ease-in-out;
-    overflow-y: auto;
-    padding: 20px;
-}
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: modalFadeIn 0.5s ease-in-out;
+            overflow-y: auto;
+            padding: 20px;
+        }
 
         .fullscreen-modal.active {
             display: flex;
@@ -50,205 +74,212 @@
         }
 
         .modal-content {
-    width: 95%;
-    max-width: 1400px;
-    max-height: 85vh;
-    background: white;
-    border-radius: 15px;
-    padding: 15px 25px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    margin: auto;
-}
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
 
-/* Reduce header sizes slightly for better fit */
-.modal-header {
+        .modal-header {
     text-align: center;
-    margin-bottom: 10px;
-    flex-shrink: 0;
+    margin-bottom: 15px;
 }
 
 .modal-header h2 {
-    font-size: 2rem;
-    color: #333;
-    margin-bottom: 3px;
+    font-size: 3rem;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px;
 }
 
 .modal-header .position-title {
-    font-size: 1.3rem;
-    color: #667eea;
-    font-weight: 600;
+    font-size: 1.5rem;
+    color: #ffd700;
+    margin-top: 5px;
 }
 
-
-.modal-candidates {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-.modal-candidate-section {
-    background: white;
-    border-radius: 12px;
-    padding: 20px 25px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-}
-
-        .modal-candidate-section.winner {
-            background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);
-            border: 2px solid gold;
+        .modal-candidates {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .modal-candidate-section.last {
-            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
-            border: 2px solid #999;
+        .modal-candidate-section {
+            margin-top: 20px;
+        }
+
+        .modal-candidate-section.winner {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+            }
         }
 
         .modal-candidate-grid {
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 20px;
-            align-items: center;
-            width: 100%;
+            grid-template-columns: 1fr 300px;
+            gap: 40px;
+            align-items: start;
         }
 
-        .modal-candidate-info {
+        .modal-details {
+            color: white;
+        }
+
+        .modal-rank-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal-candidate-name {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .modal-vote-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-vote-section h4 {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .modal-vote-row {
             display: flex;
-            align-items: center;
-            gap: 20px;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
 
-/* Adjust photo size for better balance */
-.modal-photo-container {
-    width: 120px;
-    height: 120px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid white;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    position: relative;
-    background: #f0f0f0;
-}
+        .modal-vote-row.total {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+        }
 
-.modal-photo-container .initials {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-    font-weight: bold;
-    color: #667eea;
-}
+        .modal-vote-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
 
-        .modal-photo-container img {
+        .modal-vote-count {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stream-votes-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .stream-votes-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stream-votes-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .stream-votes-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .stream-vote {
+            font-size: 0.95rem;
+        }
+
+        .modal-photo-container-large {
+            width: 300px;
+            height: 300px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-photo-container-large img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .modal-details {
-    flex: 1;
-    max-width: 600px;
-}
-
-        .modal-rank-badge {
-    display: inline-block;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-        .winner .modal-rank-badge {
-            background: gold;
-            color: #333;
-        }
-
-        .last .modal-rank-badge {
-            background: #666;
-            color: white;
-        }
-        .modal-candidate-name {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.modal-vote-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-        .modal-vote-row:last-child {
-            border-bottom: none;
-        }
-
-        .modal-vote-row.total {
-            border-top: 2px solid #333;
-            margin-top: 5px;
-            padding-top: 8px;
-            font-weight: bold;
-        }
-
-/* Adjust vote text sizes */
-.modal-vote-label {
-    font-size: 1rem;
-    color: #555;
-    white-space: nowrap;
-}
-
-.modal-vote-row.total .modal-vote-label {
-    font-size: 1.2rem;
-    color: #333;
-}
-
-.modal-vote-count {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #667eea;
-}
-
-.modal-vote-row.total .modal-vote-count {
-    font-size: 1.4rem;
-    color: #333;
-}
-
-/* Increase celebration GIF size */
-.modal-celebration {
-    width: 200px;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-celebration img {
-    width: 200px;
-    height: 200px;
-    object-fit: contain;
-}      .winner-crown {
-            font-size: 2rem;
+        .modal-photo-container-large .initials {
             position: absolute;
-            top: -10px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            z-index: 1;
+        }
+
+        .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    animation: confetti-fall linear forwards;
+    z-index: 10001;
+    pointer-events: none;
+}
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .modal-skip {
+            position: absolute;
+            top: 10px;
+            right: 70px;
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #667eea;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .modal-skip:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
         }
 
         .modal-countdown {
@@ -269,148 +300,7 @@
             z-index: 10;
         }
 
-        @media (max-width: 1024px) {
-            .modal-candidate-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .modal-celebration {
-                width: 150px;
-                height: 150px;
-                margin: 0 auto;
-            }
-
-            .modal-photo-container {
-                width: 80px;
-                height: 80px;
-            }
-
-            .modal-candidate-name {
-                font-size: 1.2rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .modal-content {
-                padding: 10px 15px;
-            }
-
-            .modal-header h2 {
-                font-size: 1.4rem;
-            }
-
-            .modal-header .position-title {
-                font-size: 1rem;
-            }
-
-            .modal-candidate-info {
-                flex-direction: row;
-                gap: 15px;
-            }
-
-            .modal-photo-container {
-                width: 70px;
-                height: 70px;
-            }
-
-            .modal-candidate-name {
-                font-size: 1.1rem;
-            }
-
-            .modal-vote-row {
-                padding: 4px 0;
-            }
-
-            .modal-vote-label {
-                font-size: 0.85rem;
-            }
-
-            .modal-vote-count {
-                font-size: 0.95rem;
-            }
-
-            .modal-celebration {
-                width: 120px;
-                height: 120px;
-            }
-
-            .modal-candidate-section {
-    background: white;
-    border-radius: 12px;
-    padding: 15px 20px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-}
-        }
-        /* Add this CSS for the skip button: */
-.modal-skip {
-    position: absolute;
-    top: 10px;
-    right: 70px;
-    padding: 10px 20px;
-    background: white;
-    border: 2px solid #667eea;
-    border-radius: 25px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    color: #667eea;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    z-index: 10;
-    transition: all 0.3s ease;
-}
-
-.modal-skip:hover {
-    background: #667eea;
-    color: white;
-    transform: scale(1.05);
-}
-/* Add confetti CSS styles */
-.confetti {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    top: -10px;
-    z-index: 1;
-    animation: confetti-fall linear forwards;
-}
-
-@keyframes confetti-fall {
-    0% {
-        transform: translateY(0) rotateZ(0deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(100vh) rotateZ(720deg);
-        opacity: 0;
-    }
-}
-* {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        html {
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 10px;
-            color: #fff;
-            overflow-x: hidden;
-            -webkit-text-size-adjust: 100%;
-            text-rendering: optimizeLegibility;
-        }
-
+        /* Main Page Styles */
         .header {
             text-align: center;
             margin-bottom: 15px;
@@ -867,181 +757,18 @@
             width: 100%;
         }
 
-        @media (max-width: 900px) {
-            .results-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .carousel-nav {
-                width: 50px;
-                height: 50px;
-                font-size: 2.5rem;
-            }
+        .page-content {
+            display: none;
+            animation-duration: 0.8s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            animation-fill-mode: both;
         }
 
-        @media (max-width: 600px) {
-            .results-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .page-btn {
-                width: 35px;
-                height: 35px;
-                font-size: 0.8rem;
-            }
-
-            .pagination {
-                gap: 8px;
-                padding: 10px 15px;
-            }
-            
-            .carousel-nav {
-                width: 45px;
-                height: 45px;
-                font-size: 2rem;
-            }
+        .page-content.active {
+            display: block;
         }
 
-        /* Smart TV optimizations */
-        @media (min-width: 1920px) {
-            body {
-                padding: 40px;
-            }
-            
-            .header h1 {
-                font-size: 3.5rem;
-            }
-            
-            .header .post-name {
-                font-size: 1.8rem;
-            }
-            
-            .results-container {
-                max-width: 1400px;
-                gap: 25px;
-            }
-            
-            .candidate-card {
-                padding: 25px 20px;
-                padding-top: 35px;
-            }
-            
-            .photo-container {
-                width: 120px;
-                height: 120px;
-                font-size: 3rem;
-            }
-            
-            .candidate-name {
-                font-size: 1.4rem;
-                padding: 12px 16px;
-            }
-            
-            .votes-count {
-                font-size: 2rem;
-            }
-            
-            .votes-label {
-                font-size: 1rem;
-            }
-            
-            .crown-emoji {
-                font-size: 3rem;
-            }
-            
-            .carousel-nav {
-                width: 80px;
-                height: 80px;
-                font-size: 4rem;
-            }
-            
-            .page-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.1rem;
-            }
-            
-            .filter-section,
-            .position-select,
-            .show-all-btn {
-                font-size: 1.2rem;
-            }
-        }
-
-        @media (min-width: 3840px) {
-            body {
-                padding: 60px;
-            }
-            
-            .header h1 {
-                font-size: 5rem;
-            }
-            
-            .header .post-name {
-                font-size: 2.5rem;
-            }
-            
-            .results-container {
-                max-width: 2000px;
-                gap: 35px;
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            .candidate-card {
-                padding: 35px 30px;
-                padding-top: 50px;
-            }
-            
-            .photo-container {
-                width: 160px;
-                height: 160px;
-                font-size: 4rem;
-                border: 5px solid #667eea;
-            }
-            
-            .candidate-name {
-                font-size: 2rem;
-                margin-bottom: 10px;
-                padding: 15px 20px;
-            }
-            
-            .votes-count {
-                font-size: 2.8rem;
-            }
-            
-            .votes-label {
-                font-size: 1.3rem;
-            }
-            
-            .crown-emoji {
-                font-size: 4rem;
-                top: -15px;
-            }
-            
-            .carousel-nav {
-                width: 100px;
-                height: 100px;
-                font-size: 5rem;
-            }
-            
-            .page-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 1.3rem;
-            }
-            
-            .filter-section h3 {
-                font-size: 2rem;
-                margin-bottom: 25px;
-            }
-            
-            .position-select,
-            .show-all-btn {
-                font-size: 1.5rem;
-                padding: 18px 40px;
-            }
-        }
-
+        /* Animations */
         @keyframes fadeInDown {
             from {
                 opacity: 0;
@@ -1058,17 +785,6 @@
             50% { transform: translateX(-50%) translateY(-8px); }
         }
 
-        @keyframes countUp {
-            from {
-                transform: scale(1.3);
-                opacity: 0.5;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
         @keyframes shimmer {
             0%, 100% { 
                 background-position: 0% 50%;
@@ -1076,17 +792,6 @@
             50% { 
                 background-position: 100% 50%;
             }
-        }
-
-        .page-content {
-            display: none;
-            animation-duration: 0.8s;
-            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            animation-fill-mode: both;
-        }
-
-        .page-content.active {
-            display: block;
         }
 
         @keyframes slideInRight {
@@ -1289,53 +994,384 @@
             }
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .modal-candidate-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
             }
-            to {
-                opacity: 1;
+
+            .modal-photo-container-large {
+                width: 250px;
+                height: 250px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .results-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .carousel-nav {
+                width: 50px;
+                height: 50px;
+                font-size: 2.5rem;
             }
         }
 
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 20px;
+                max-width: 95%;
             }
-            to {
-                opacity: 0;
+
+            .modal-header h2 {
+                font-size: 2rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 1.2rem;
+            }
+
+            .modal-candidate-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .modal-photo-container-large {
+                width: 200px;
+                height: 200px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 3rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 1.5rem;
+            }
+
+            .modal-vote-section h4 {
+                font-size: 1rem;
+            }
+
+            .modal-vote-label {
+                font-size: 0.9rem;
+            }
+
+            .modal-vote-count {
+                font-size: 1rem;
+            }
+
+            .stream-votes-grid {
+                max-height: 200px;
+            }
+
+            .results-container {
+                grid-template-columns: 1fr;
             }
         }
-/* Add new styles for the large photo container */
-.modal-photo-container-large {
-    width: 200px;
-    height: 200px;
-    flex-shrink: 0;
-    border-radius: 15px;
-    overflow: hidden;
-    border: 4px solid gold;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    position: relative;
-    background: #f0f0f0;
-}
 
-.modal-photo-container-large .initials {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 3rem;
-    font-weight: bold;
-    color: #667eea;
-}
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
 
-.modal-photo-container-large img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+            .modal-content {
+                padding: 15px;
+            }
 
+            .modal-header h2 {
+                font-size: 1.5rem;
+            }
 
+            .modal-header .position-title {
+                font-size: 1rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 1.2rem;
+            }
+
+            .modal-photo-container-large {
+                width: 150px;
+                height: 150px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 2.5rem;
+            }
+
+            .modal-vote-row {
+                padding: 8px 10px;
+            }
+
+            .modal-vote-label {
+                font-size: 0.85rem;
+            }
+
+            .modal-vote-count {
+                font-size: 0.95rem;
+            }
+
+            .modal-skip {
+                right: 60px;
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+
+            .modal-countdown {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .page-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+
+            .pagination {
+                gap: 8px;
+                padding: 10px 15px;
+            }
+            
+            .carousel-nav {
+                width: 45px;
+                height: 45px;
+                font-size: 2rem;
+            }
+
+            .carousel-nav.prev {
+                left: 10px;
+            }
+
+            .carousel-nav.next {
+                right: 10px;
+            }
+        }
+
+        /* Smart TV and Large Screen optimizations */
+        @media (min-width: 1920px) {
+            body {
+                padding: 40px;
+            }
+            
+            .header h1 {
+                font-size: 3.5rem;
+            }
+            
+            .header .post-name {
+                font-size: 1.8rem;
+            }
+            
+            .results-container {
+                max-width: 1400px;
+                gap: 25px;
+            }
+            
+            .candidate-card {
+                padding: 25px 20px;
+                padding-top: 35px;
+            }
+            
+            .photo-container {
+                width: 120px;
+                height: 120px;
+                font-size: 3rem;
+            }
+            
+            .candidate-name {
+                font-size: 1.4rem;
+                padding: 12px 16px;
+            }
+            
+            .votes-count {
+                font-size: 2rem;
+            }
+            
+            .votes-label {
+                font-size: 1rem;
+            }
+            
+            .crown-emoji {
+                font-size: 3rem;
+            }
+            
+            .carousel-nav {
+                width: 80px;
+                height: 80px;
+                font-size: 4rem;
+            }
+            
+            .page-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.1rem;
+            }
+            
+            .filter-section,
+            .position-select,
+            .show-all-btn {
+                font-size: 1.2rem;
+            }
+
+            .modal-content {
+                padding: 60px;
+                max-width: 1200px;
+            }
+
+            .modal-header h2 {
+                font-size: 4rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 2rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 2.5rem;
+            }
+
+            .modal-photo-container-large {
+                width: 400px;
+                height: 400px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 5rem;
+            }
+
+            .modal-vote-label {
+                font-size: 1.3rem;
+            }
+
+            .modal-vote-count {
+                font-size: 1.5rem;
+            }
+
+            .modal-vote-section h4 {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (min-width: 3840px) {
+            body {
+                padding: 60px;
+            }
+            
+            .header h1 {
+                font-size: 5rem;
+            }
+            
+            .header .post-name {
+                font-size: 2.5rem;
+            }
+            
+            .results-container {
+                max-width: 2000px;
+                gap: 35px;
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .candidate-card {
+                padding: 35px 30px;
+                padding-top: 50px;
+            }
+            
+            .photo-container {
+                width: 160px;
+                height: 160px;
+                font-size: 4rem;
+                border: 5px solid #667eea;
+            }
+            
+            .candidate-name {
+                font-size: 2rem;
+                margin-bottom: 10px;
+                padding: 15px 20px;
+            }
+            
+            .votes-count {
+                font-size: 2.8rem;
+            }
+            
+            .votes-label {
+                font-size: 1.3rem;
+            }
+            
+            .crown-emoji {
+                font-size: 4rem;
+                top: -15px;
+            }
+            
+            .carousel-nav {
+                width: 100px;
+                height: 100px;
+                font-size: 5rem;
+            }
+            
+            .page-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.3rem;
+            }
+            
+            .filter-section h3 {
+                font-size: 2rem;
+                margin-bottom: 25px;
+            }
+            
+            .position-select,
+            .show-all-btn {
+                font-size: 1.5rem;
+                padding: 18px 40px;
+            }
+
+            .modal-content {
+                padding: 80px;
+                max-width: 1600px;
+            }
+
+            .modal-header h2 {
+                font-size: 5rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 2.5rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 3rem;
+            }
+
+            .modal-photo-container-large {
+                width: 500px;
+                height: 500px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 6rem;
+            }
+
+            .modal-vote-label {
+                font-size: 1.6rem;
+            }
+
+            .modal-vote-count {
+                font-size: 1.8rem;
+            }
+
+            .modal-vote-section h4 {
+                font-size: 1.8rem;
+            }
+
+            .modal-rank-badge {
+                font-size: 1.5rem;
+                padding: 15px 30px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2033,25 +2069,26 @@
             });
         }
 
-// Add this confetti function before the showModal function:
-function createConfetti() {
+        function createConfetti() {
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
     const confettiCount = 150;
-    const container = document.getElementById('fullscreenModal');
     
     for (let i = 0; i < confettiCount; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-10px';
         confetti.style.animationDelay = Math.random() * 3 + 's';
         confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        container.appendChild(confetti);
+        document.body.appendChild(confetti);
         
-        // Remove confetti after animation
+        // Remove confetti after animation completes
+        const duration = parseFloat(confetti.style.animationDuration) * 1000;
+        const delay = parseFloat(confetti.style.animationDelay) * 1000;
         setTimeout(() => {
             confetti.remove();
-        }, 5000);
+        }, duration + delay);
     }
 }
 
@@ -2070,54 +2107,124 @@ function animateModalVotes() {
     });
 }
 
-// Update the showModal function to call animateModalVotes after displaying the modal:
+// Update the showModal function to show candidates sequentially:
+let currentCandidateIndex = 0;
+
 function showModal(pageIndex) {
-    if (pages.length === 0 || pages[pageIndex].candidates.length < 2) return;
+    if (pages.length === 0 || pages[pageIndex].candidates.length === 0) return;
     
     showingModal = true;
+    currentCandidateIndex = 0;
     const page = pages[pageIndex];
+    
+    showCandidateInModal(page, 0);
+}
+
+function showCandidateInModal(page, candidateIndex) {
     const modal = document.getElementById('fullscreenModal');
     const modalCandidates = document.getElementById('modalCandidates');
     const modalPositionTitle = document.getElementById('modalPositionTitle');
     
-    const firstCandidate = page.candidates[0];
+    const candidate = page.candidates[candidateIndex];
+const isWinner = candidateIndex === 0;
+
+// Get rank badge based on position
+const rankBadges = {
+    0: '🥇 Winner',
+    1: '🥈 2nd Place',
+    2: '🥉 3rd Place'
+};
+const rankBadge = rankBadges[candidateIndex] || `${getPositionLabel(candidateIndex + 1)} Place`;
+
+// Update modal header based on whether it's the winner or not
+const modalHeader = document.querySelector('.modal-header h2');
+const goatSubtitle = document.querySelector('.modal-header p[style*="font-size: 0.9rem"]');
+if (isWinner) {
+    modalHeader.style.display = 'block';
+    goatSubtitle.style.display = 'block';
+} else {
+    modalHeader.style.display = 'none';
+    goatSubtitle.style.display = 'none';
+}
+
+modalPositionTitle.textContent = page.title;
     
-    modalPositionTitle.textContent = page.title;
+    // Build votes breakdown HTML if data exists
+    let votesBreakdownHTML = '';
+    if (candidate.votesByGender) {
+        votesBreakdownHTML += `
+            <div class="modal-vote-section">
+                <h4>Votes by Gender</h4>
+                <div class="modal-vote-row">
+                    <span class="modal-vote-label">Male:</span>
+                    <span class="modal-vote-count">${candidate.votesByGender.male.toLocaleString()}</span>
+                </div>
+                <div class="modal-vote-row">
+                    <span class="modal-vote-label">Female:</span>
+                    <span class="modal-vote-count">${candidate.votesByGender.female.toLocaleString()}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (candidate.votesByStream) {
+        const streamEntries = Object.entries(candidate.votesByStream).sort((a, b) => b[1] - a[1]);
+        votesBreakdownHTML += `
+            <div class="modal-vote-section">
+                <h4>Votes by Stream</h4>
+                <div class="stream-votes-grid">
+                    ${streamEntries.map(([stream, votes]) => `
+                        <div class="modal-vote-row stream-vote">
+                            <span class="modal-vote-label">${stream}:</span>
+                            <span class="modal-vote-count">${votes.toLocaleString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
     
     modalCandidates.innerHTML = `
-        <!-- Winner Section -->
-        <div class="modal-candidate-section winner">
+        <div class="modal-candidate-section ${isWinner ? 'winner' : ''}">
             <div class="modal-candidate-grid">
                 <div class="modal-details">
-                    <div class="modal-rank-badge">🥇 Winner</div>
-                    <h3 class="modal-candidate-name">${firstCandidate.name}</h3>
-                    <div class="modal-vote-row">
-                        <span class="modal-vote-label">Online Votes:</span>
-                        <span class="modal-vote-count">${firstCandidate.onlineVotes.toLocaleString()}</span>
+                    <div class="modal-rank-badge">${rankBadge}</div>
+                    <h3 class="modal-candidate-name">${candidate.name}</h3>
+                    <div class="modal-vote-section">
+                        <h4>Vote Summary</h4>
+                        <div class="modal-vote-row">
+                            <span class="modal-vote-label">Online Votes:</span>
+                            <span class="modal-vote-count">${candidate.onlineVotes.toLocaleString()}</span>
+                        </div>
+                        <div class="modal-vote-row">
+                            <span class="modal-vote-label">Physical Votes:</span>
+                            <span class="modal-vote-count">${candidate.physicalVotes.toLocaleString()}</span>
+                        </div>
+                        <div class="modal-vote-row total">
+                            <span class="modal-vote-label">Total Votes:</span>
+                            <span class="modal-vote-count">${candidate.votes.toLocaleString()}</span>
+                        </div>
                     </div>
-                    <div class="modal-vote-row">
-                        <span class="modal-vote-label">Physical Votes:</span>
-                        <span class="modal-vote-count">${firstCandidate.physicalVotes.toLocaleString()}</span>
-                    </div>
-                    <div class="modal-vote-row total">
-                        <span class="modal-vote-label">Total Votes:</span>
-                        <span class="modal-vote-count">${firstCandidate.votes.toLocaleString()}</span>
-                    </div>
+                    ${votesBreakdownHTML}
                 </div>
                 <div class="modal-photo-container-large">
-                    <span class="initials">${firstCandidate.initials}</span>
-                    <img src="${firstCandidate.photoUrl}" alt="${firstCandidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                    <span class="initials">${candidate.initials}</span>
+                    <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
                 </div>
             </div>
         </div>
     `;
     
-    modal.classList.add('active');
+    if (!modal.classList.contains('active')) {
+        modal.classList.add('active');
+    }
     
-    // Create confetti effect
-    setTimeout(() => {
-        createConfetti();
-    }, 100);
+    // Create confetti only for winner
+    if (isWinner) {
+        setTimeout(() => {
+            createConfetti();
+        }, 100);
+    }
     
     // Animate vote counts in modal
     setTimeout(() => {
@@ -2125,29 +2232,48 @@ function showModal(pageIndex) {
     }, 300);
     
     clearTimeout(modalTimer);
-    clearInterval(modalCountdownTimer);
-    
-    modalTimer = setTimeout(() => {
+
+// Show this candidate for 10 seconds, then move to next
+modalTimer = setTimeout(() => {
+    if (candidateIndex < page.candidates.length - 1) {
+        // Slide out current candidate to the left
+        modalCandidates.style.animation = 'slideOutLeft 0.5s ease-in-out';
+        setTimeout(() => {
+            modalCandidates.style.animation = '';
+            showCandidateInModal(page, candidateIndex + 1);
+            // Slide in next candidate from the right
+            modalCandidates.style.animation = 'slideInRight 0.5s ease-in-out';
+            setTimeout(() => {
+                modalCandidates.style.animation = '';
+            }, 500);
+        }, 500);
+    } else {
+        // All candidates shown, hide modal
         hideModal();
-    }, 10000);
+    }
+}, 10000);
 }
 
-
-        function hideModal() {
-            const modal = document.getElementById('fullscreenModal');
-            modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
-            
-            setTimeout(() => {
-                modal.classList.remove('active');
-                modal.style.animation = '';
-                showingModal = false;
-                
-                // Move to next page after modal closes
-                setTimeout(() => {
-                    nextPage();
-                }, 500);
-            }, 500);
-        }
+function hideModal() {
+    const modal = document.getElementById('fullscreenModal');
+    
+    // Clear any remaining confetti
+    const confettiElements = modal.querySelectorAll('.confetti');
+    confettiElements.forEach(c => c.remove());
+    
+    modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
+    
+    setTimeout(() => {
+        modal.classList.remove('active');
+        modal.style.animation = '';
+        showingModal = false;
+        
+        // Move to next page after modal closes
+        setTimeout(() => {
+            nextPage();
+        }, 500);
+    }, 500);
+}
 
         function initializePages() {
             if (pages.length === 0) return;
@@ -2293,13 +2419,15 @@ function showModal(pageIndex) {
             
             allPages = ELECTORAL_DATA.positions.map(position => {
                 const candidates = position.candidates.map(candidate => ({
-                    name: candidate.candidate_name,
-                    votes: candidate.total_votes,
-                    onlineVotes: candidate.online_votes,
-                    physicalVotes: candidate.physical_votes,
-                    initials: getInitials(candidate.candidate_name),
-                    photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
-                }));
+    name: candidate.candidate_name,
+    votes: candidate.total_votes,
+    onlineVotes: candidate.online_votes || 0,
+    physicalVotes: candidate.physical_votes || 0,
+    votesByGender: candidate.votes_by_gender || null,
+    votesByStream: candidate.votes_by_stream || null,
+    initials: getInitials(candidate.candidate_name),
+    photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
+}));
 
                 return {
                     title: position.position,
@@ -2313,7 +2441,6 @@ function showModal(pageIndex) {
             
             console.log(`Loaded ${ELECTORAL_DATA.total_positions} positions with ${ELECTORAL_DATA.total_votes_across_all_positions} total votes`);
         }
-
         function keepAwake() {
             if ('wakeLock' in navigator) {
                 navigator.wakeLock.request('screen').catch(err => {
