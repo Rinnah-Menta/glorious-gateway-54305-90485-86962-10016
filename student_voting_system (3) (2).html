@@ -2042,44 +2042,24 @@
         }
 
         .congrats-celebration {
-            width: 180px;
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .congrats-photo-container {
-            width: 120px;
-            height: 120px;
-            position: relative;
             border: none;
             box-shadow: none;
             border-radius: 0;
             background: transparent;
-            overflow: visible;
+            padding: 0;
+            margin: 0;
         }
 
-        .congrats-photo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .congrats-celebration img {
+            width: auto;
+            height: 200px;
+            object-fit: contain;
             border: none;
             box-shadow: none;
             border-radius: 0;
+            background: transparent;
+            display: block;
         }
-
-        .congrats-photo-container .initials {
-            border: none;
-            box-shadow: none;
-            border-radius: 0;
-            background: rgba(0, 0, 0, 0.1);
-        }
-
         .winner-crown {
             font-size: 2rem;
             position: absolute;
@@ -2224,7 +2204,6 @@
                 
                 <!-- Right Side: Stream Analysis Table -->
                 <div class="analysis-section">
-                    <h3 class="section-title">📋 Stream Analysis</h3>
                     <div class="grid-table-wrapper">
                         <table class="stream-grid-table" id="streamGridTable">
                             <!-- Populated by JavaScript as a grid -->
