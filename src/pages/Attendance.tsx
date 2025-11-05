@@ -110,11 +110,18 @@ const AttendanceMarking = () => {
   const [absentReason, setAbsentReason] = useState<string>("");
   const [customReason, setCustomReason] = useState<string>("");
   const [showReasonDialog, setShowReasonDialog] = useState(false);
+  const [hasUnsyncedData, setHasUnsyncedData] = useState(false);
   
   // Load existing attendance from database when date or class changes
   useEffect(() => {
     loadAttendance();
+    syncFromLocalStorage();
   }, [selectedDate, selectedClass]);
+  
+  // Check for unsynced data on mount
+  useEffect(() => {
+    checkUnsyncedData();
+  }, [attendanceRecords]);
   
   const loadAttendance = async () => {
     try {
@@ -143,6 +150,45 @@ const AttendanceMarking = () => {
     }
   };
 
+  const getLocalStorageKey = () => {
+    return `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+  };
+
+  const saveToLocalStorage = (records: { [key: string]: AttendanceRecord }) => {
+    try {
+      localStorage.setItem(getLocalStorageKey(), JSON.stringify(records));
+      setHasUnsyncedData(true);
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+
+  const syncFromLocalStorage = () => {
+    try {
+      const stored = localStorage.getItem(getLocalStorageKey());
+      if (stored) {
+        const records = JSON.parse(stored);
+        setAttendanceRecords(prev => ({ ...prev, ...records }));
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+  };
+
+  const clearLocalStorage = () => {
+    try {
+      localStorage.removeItem(getLocalStorageKey());
+      setHasUnsyncedData(false);
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
+  };
+
+  const checkUnsyncedData = () => {
+    const stored = localStorage.getItem(getLocalStorageKey());
+    setHasUnsyncedData(!!stored);
+  };
+
   const currentClass = realClasses.find(cls => cls.id === selectedClass);
   
   // Filter students based on selected class and search term
@@ -153,17 +199,47 @@ const AttendanceMarking = () => {
     student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const markAttendance = (studentId: string, status: 'present' | 'absent', reason?: string) => {
-    setAttendanceRecords(prev => ({
-      ...prev,
-      [studentId]: {
-        studentId,
-        status,
-        timeMarked: new Date().toISOString(),
-        absentReason: status === 'absent' ? reason : undefined
-      }
-    }));
-    toast.success(`Marked as ${status}`);
+  const markAttendance = async (studentId: string, status: 'present' | 'absent', reason?: string) => {
+    const record: AttendanceRecord = {
+      studentId,
+      status,
+      timeMarked: new Date().toISOString(),
+      absentReason: status === 'absent' ? reason : undefined
+    };
+
+    // Update local state immediately
+    setAttendanceRecords(prev => ({ ...prev, [studentId]: record }));
+
+    // Try to save to database immediately
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await (supabase as any)
+        .from('attendance_records')
+        .upsert({
+          student_id: studentId,
+          stream_id: selectedClass,
+          date: format(selectedDate, 'yyyy-MM-dd'),
+          status: status,
+          marked_by: user?.id || null,
+          absent_reason: reason || null
+        }, {
+          onConflict: 'student_id,date'
+        });
+
+      if (error) throw error;
+      
+      // Clear localStorage on successful save
+      clearLocalStorage();
+      toast.success(`Marked as ${status}`);
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      
+      // Save to localStorage as fallback
+      const newRecords = { ...attendanceRecords, [studentId]: record };
+      saveToLocalStorage(newRecords);
+      toast.warning(`Marked as ${status} - Saved locally. Click "Sync Attendance" when online.`);
+    }
   };
 
   const handleAbsentClick = (student: Student) => {
@@ -198,21 +274,9 @@ const AttendanceMarking = () => {
     return { present, absent, total, marked };
   };
 
-  const saveAttendance = async () => {
-    // Validate all students are marked
-    if (stats.marked !== stats.total) {
-      toast.error(`Please mark all students. ${stats.total - stats.marked} students remaining.`);
-      return;
-    }
-
-    // Validate date is not in the future
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selected = new Date(selectedDate);
-    selected.setHours(0, 0, 0, 0);
-    
-    if (selected > today) {
-      toast.error("Cannot mark attendance for future dates.");
+  const syncAttendance = async () => {
+    if (!hasUnsyncedData) {
+      toast.info("All attendance is already synced!");
       return;
     }
 
@@ -241,27 +305,61 @@ const AttendanceMarking = () => {
       
       if (error) throw error;
       
+      // Clear localStorage on successful sync
+      clearLocalStorage();
+      
       const stats = getAttendanceStats();
-      toast.success(`Attendance saved! ${stats.marked} of ${stats.total} students marked.`);
+      toast.success(`Attendance synced! ${stats.marked} records uploaded to database.`);
     } catch (error) {
-      console.error('Error saving attendance:', error);
-      toast.error('Failed to save attendance. Please try again.');
+      console.error('Error syncing attendance:', error);
+      toast.error('Failed to sync attendance. Will retry when online.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const markAllPresent = () => {
-    const newRecords: { [key: string]: AttendanceRecord } = {};
-    filteredStudents.forEach(student => {
-      newRecords[student.id] = {
-        studentId: student.id,
-        status: 'present',
-        timeMarked: new Date().toISOString()
-      };
-    });
-    setAttendanceRecords(prev => ({ ...prev, ...newRecords }));
-    toast.success("All students marked as present!");
+  const markAllPresent = async () => {
+    const toastId = toast.loading("Marking all students as present...");
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Prepare all records
+      const attendanceToSave = filteredStudents.map(student => ({
+        student_id: student.id,
+        stream_id: selectedClass,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        status: 'present' as const,
+        marked_by: user?.id || null,
+        absent_reason: null
+      }));
+      
+      // Save to database
+      const { error } = await (supabase as any)
+        .from('attendance_records')
+        .upsert(attendanceToSave, {
+          onConflict: 'student_id,date'
+        });
+      
+      if (error) throw error;
+      
+      // Update local state
+      const newRecords: { [key: string]: AttendanceRecord } = {};
+      filteredStudents.forEach(student => {
+        newRecords[student.id] = {
+          studentId: student.id,
+          status: 'present',
+          timeMarked: new Date().toISOString()
+        };
+      });
+      setAttendanceRecords(prev => ({ ...prev, ...newRecords }));
+      
+      clearLocalStorage();
+      toast.success("All students marked as present!", { id: toastId });
+    } catch (error) {
+      console.error('Error marking all present:', error);
+      toast.error("Failed to mark all present. Try again.", { id: toastId });
+    }
   };
 
   const markAllAbsent = () => {
@@ -350,12 +448,12 @@ const AttendanceMarking = () => {
           {selectedClass && (
             <div className="flex justify-center md:justify-end">
               <Button 
-                onClick={saveAttendance} 
-                disabled={isSaving || stats.marked === 0}
-                className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+                onClick={syncAttendance} 
+                disabled={isSaving || !hasUnsyncedData}
+                className={`w-full sm:w-auto ${hasUnsyncedData ? 'bg-orange-600 hover:bg-orange-700' : 'bg-muted text-muted-foreground'}`}
               >
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? "Saving..." : "Update Attendance"}
+                <Upload className="h-4 w-4 mr-2" />
+                {isSaving ? "Syncing..." : hasUnsyncedData ? "Sync Attendance" : "All Synced ✓"}
               </Button>
             </div>
           )}
