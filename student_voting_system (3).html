@@ -2274,8 +2274,8 @@
     <div class="pagination" id="pagination"></div>
 
   <script>
-    // Optimized Electoral Data Script
-    const ELECTORAL_DATA = {
+ // Optimized Electoral Data Script with Performance Improvements
+   const ELECTORAL_DATA = {
   "total_positions": 14,
   "total_votes_across_all_positions": 7762,
   "positions": [
@@ -3771,805 +3771,832 @@
   ]
 };
 
-let pages = [];
-let allPages = [];
-let currentPage = 0;
-let isTransitioning = false;
-let autoScrollTimer;
-let modalTimer;
-let modalCountdownTimer;
-let congratsCountdownTimer;
-let modalCountdown = 10;
-let congratsCountdown = 10;
-let showingModal = false;
-let showingCongratsModal = false;
-let activeAnimations = [];
+// Global state management
+const state = {
+  pages: [],
+  allPages: [],
+  currentPage: 0,
+  isTransitioning: false,
+  showingModal: false,
+  showingCongratsModal: false,
+  activeAnimations: new Set(),
+  timers: {
+    autoScroll: null,
+    modal: null,
+    modalCountdown: null,
+    congratsCountdown: null
+  },
+  countdowns: {
+    modal: 10,
+    congrats: 10
+  }
+};
 
 const transitions = [
-    { in: 'slideInRight', out: 'slideOutLeft' },
-    { in: 'slideInLeft', out: 'slideOutRight' },
-    { in: 'bounceIn', out: 'bounceOut' },
-    { in: 'flipInY', out: 'flipOutY' },
-    { in: 'flipInX', out: 'flipOutX' },
-    { in: 'zoomIn', out: 'zoomOut' },
-    { in: 'swipeInUp', out: 'swipeOutDown' },
-    { in: 'morphIn', out: 'morphOut' }
+  { in: 'slideInRight', out: 'slideOutLeft' },
+  { in: 'slideInLeft', out: 'slideOutRight' },
+  { in: 'bounceIn', out: 'bounceOut' },
+  { in: 'flipInY', out: 'flipOutY' },
+  { in: 'flipInX', out: 'flipOutX' },
+  { in: 'zoomIn', out: 'zoomOut' },
+  { in: 'swipeInUp', out: 'swipeOutDown' },
+  { in: 'morphIn', out: 'morphOut' }
 ];
 
+// Utility functions
 function getInitials(name) {
-    return name.split(' ').map(word => word[0]).join('').substring(0, 2);
+  return name.split(' ').map(word => word[0]).join('').substring(0, 2);
 }
 
 function getPositionLabel(position) {
-    const labels = {
-        1: '1st',
-        2: '2nd',
-        3: '3rd'
-    };
-    return labels[position] || `${position}th`;
+  const labels = { 1: '1st', 2: '2nd', 3: '3rd' };
+  return labels[position] || `${position}th`;
 }
 
 function getCandidatePhotoUrl(candidateId, name) {
-    const specialCases = {
-        '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG',
-        'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG',
-        '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG',
-        '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG',
-        '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG',
-        '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG',
-        'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg',
-        '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg',
-        'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG'
-    };
-     
-    if (candidateId && specialCases[candidateId]) {
-        return specialCases[candidateId];
+  const specialCases = {
+    '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG',
+    'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG',
+    '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG',
+    '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG',
+    '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG',
+    '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG',
+    'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg',
+    '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg',
+    'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG'
+  };
+  
+  if (candidateId && specialCases[candidateId]) {
+    return specialCases[candidateId];
+  }
+  
+  const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
+  const encodedName = encodeURIComponent(name);
+  return `${baseUrl}/${encodedName}.JPG`;
+}
+
+// Timer management
+function clearAllTimers() {
+  Object.keys(state.timers).forEach(key => {
+    if (state.timers[key]) {
+      clearTimeout(state.timers[key]);
+      clearInterval(state.timers[key]);
+      state.timers[key] = null;
     }
-    
-    const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
-    const encodedName = encodeURIComponent(name);
-    return `${baseUrl}/${encodedName}.JPG`;
+  });
 }
 
-function createPageHTML(page, pageIndex) {
-    return `
-        <div class="page-content ${pageIndex === 0 ? 'active' : ''}" data-page="${pageIndex}">
-            <div class="header">
-                <h1>🗳️ Final Election Results</h1>
-                <p class="post-name">${page.title}</p>
-            </div>
-            <div class="results-container" data-page-index="${pageIndex}">
-                ${page.candidates.map((candidate, i) => `
-                    <div class="candidate-card position-${i + 1}" data-position="${i + 1}" data-votes="${candidate.votes}">
-                        ${i === 0 ? '<div class="crown-emoji">👑</div>' : ''}
-                        <div class="position-ribbon">${getPositionLabel(i + 1)}</div>
-                        <div class="photo-container">
-                            <span class="initials">${candidate.initials}</span>
-                            <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
-                        </div>
-                        <div class="votes-display">
-                            <h3 class="candidate-name">${candidate.name}</h3>
-                            <div class="vote-row">
-                                <span class="votes-label">Online Votes:</span>
-                                <span class="votes-count" data-target="${candidate.onlineVotes}">0</span>
-                            </div>
-                            <div class="vote-row">
-                                <span class="votes-label">Physical Votes:</span>
-                                <span class="votes-count" data-target="${candidate.physicalVotes}">0</span>
-                            </div>
-                            <div class="vote-row total">
-                                <span class="votes-label total-label">Total Votes:</span>
-                                <span class="votes-count total-count" data-target="${candidate.votes}">0</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function calculateTotalVotes(data) {
-    let overallTotal = 0;
-    
-    data.positions.forEach(position => {
-        let positionTotal = 0;
-        
-        position.candidates.forEach(candidate => {
-            const onlineVotes = candidate.online_votes || 0;
-            const physicalVotes = candidate.physical_votes || 0;
-            
-            candidate.total_votes = onlineVotes + physicalVotes;
-            positionTotal += candidate.total_votes;
-            
-            candidate.online_votes = onlineVotes;
-            candidate.physical_votes = physicalVotes;
-        });
-        
-        position.candidates.sort((a, b) => b.total_votes - a.total_votes);
-        
-        position.total_votes_cast = positionTotal;
-        overallTotal += positionTotal;
-    });
-    
-    data.total_votes_across_all_positions = overallTotal;
-    
-    return data;
-}
-
-const updatedData = calculateTotalVotes(ELECTORAL_DATA);
-console.log('Total votes calculated:', updatedData.total_votes_across_all_positions);
-
-// Optimized animation function with cancellation support
+// Optimized animation with requestAnimationFrame pooling
 function animateCount(element, start, end, duration) {
-    // Cancel any existing animation on this element
-    if (element._animationId) {
-        cancelAnimationFrame(element._animationId);
+  // Cancel existing animation
+  if (state.activeAnimations.has(element)) {
+    cancelAnimationFrame(element._animationId);
+    state.activeAnimations.delete(element);
+  }
+  
+  const startTime = performance.now();
+  const range = end - start;
+  
+  function updateCount(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Use easeOutCubic for smoother animation
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(start + (range * easeOut));
+    
+    // Use textContent for better performance
+    element.textContent = current.toLocaleString();
+    
+    if (progress < 1) {
+      element._animationId = requestAnimationFrame(updateCount);
+    } else {
+      element.textContent = end.toLocaleString();
+      state.activeAnimations.delete(element);
+      element._animationId = null;
     }
-    
-    const startTime = Date.now();
-    const range = end - start;
-    
-    function updateCount() {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOutQuad = progress * (2 - progress);
-        const current = Math.floor(start + (range * easeOutQuad));
-        
-        element.textContent = current.toLocaleString();
-        
-        if (progress < 1) {
-            element._animationId = requestAnimationFrame(updateCount);
-        } else {
-            element.textContent = end.toLocaleString();
-            element._animationId = null;
-        }
-    }
-    
-    element._animationId = requestAnimationFrame(updateCount);
+  }
+  
+  state.activeAnimations.add(element);
+  element._animationId = requestAnimationFrame(updateCount);
 }
 
-// Cancel all active animations
+// Cancel all active animations efficiently
 function cancelAllAnimations() {
-    document.querySelectorAll('[data-target]').forEach(el => {
-        if (el._animationId) {
-            cancelAnimationFrame(el._animationId);
-            el._animationId = null;
-        }
-    });
-}
-
-function animatePageCounts(pageIndex) {
-    const pageContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
-    if (!pageContent) return;
-
-    const voteCountElements = pageContent.querySelectorAll('.votes-count');
-    
-    // Use shorter delays and batch updates
-    voteCountElements.forEach((element, index) => {
-        const targetVotes = parseInt(element.dataset.target);
-        setTimeout(() => {
-            animateCount(element, 0, targetVotes, 1200); // Reduced from 1500
-        }, index * 50); // Reduced from 100
-    });
-}
-
-// Optimized confetti with fewer particles and auto-cleanup
-function createConfetti() {
-    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
-    const confettiCount = 80; // Reduced from 150
-    const fragment = document.createDocumentFragment();
-    
-    for (let i = 0; i < confettiCount; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + 'vw';
-        confetti.style.top = '-10px';
-        confetti.style.animationDelay = Math.random() * 2 + 's'; // Reduced from 3s
-        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's'; // Reduced from 3+2
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        fragment.appendChild(confetti);
+  state.activeAnimations.forEach(element => {
+    if (element._animationId) {
+      cancelAnimationFrame(element._animationId);
+      element._animationId = null;
     }
-    
-    document.body.appendChild(fragment);
-    
-    // Clean up all confetti after max duration
+  });
+  state.activeAnimations.clear();
+}
+
+// Batch animate counts with staggered delays
+function animatePageCounts(pageIndex) {
+  const pageContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+  if (!pageContent) return;
+
+  const voteCountElements = pageContent.querySelectorAll('.votes-count');
+  
+  // Use single rAF for stagger scheduling
+  let delay = 0;
+  voteCountElements.forEach((element) => {
+    const targetVotes = parseInt(element.dataset.target);
     setTimeout(() => {
-        document.querySelectorAll('.confetti').forEach(c => c.remove());
-    }, 5000);
+      animateCount(element, 0, targetVotes, 1000);
+    }, delay);
+    delay += 40; // Reduced stagger
+  });
 }
 
-// Optimized modal vote animation with batching
+// Optimized confetti with document fragment and fewer particles
+function createConfetti() {
+  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+  const confettiCount = 50; // Reduced from 80
+  const fragment = document.createDocumentFragment();
+  
+  for (let i = 0; i < confettiCount; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      top: -10px;
+      animation-delay: ${Math.random() * 1.5}s;
+      animation-duration: ${Math.random() * 1.5 + 2}s;
+      background-color: ${colors[Math.floor(Math.random() * colors.length)]};
+    `;
+    fragment.appendChild(confetti);
+  }
+  
+  document.body.appendChild(fragment);
+  
+  // Auto cleanup with single timer
+  setTimeout(() => {
+    const confettiElements = document.querySelectorAll('.confetti');
+    confettiElements.forEach(c => c.remove());
+  }, 4000);
+}
+
+// Batch modal vote animations
 function animateModalVotes() {
-    const voteElements = [
-        document.getElementById('onlineTotal'),
-        document.getElementById('physicalTotal'),
-        document.getElementById('grandTotal')
-    ];
-    
-    voteElements.forEach((element, index) => {
-        const targetVotes = parseInt(element.dataset.target);
-        
-        setTimeout(() => {
-            animateCount(element, 0, targetVotes, 1200); // Reduced from 1500
-        }, index * 150); // Reduced from 200
-    });
+  const voteElements = [
+    document.getElementById('onlineTotal'),
+    document.getElementById('physicalTotal'),
+    document.getElementById('grandTotal')
+  ];
+  
+  let delay = 0;
+  voteElements.forEach((element) => {
+    if (element) {
+      const targetVotes = parseInt(element.dataset.target);
+      setTimeout(() => {
+        animateCount(element, 0, targetVotes, 1000);
+      }, delay);
+      delay += 120;
+    }
+  });
 }
 
+// Page HTML creation (unchanged but optimized)
+function createPageHTML(page, pageIndex) {
+  return `
+    <div class="page-content ${pageIndex === 0 ? 'active' : ''}" data-page="${pageIndex}">
+      <div class="header">
+        <h1>🗳️ Final Election Results</h1>
+        <p class="post-name">${page.title}</p>
+      </div>
+      <div class="results-container" data-page-index="${pageIndex}">
+        ${page.candidates.map((candidate, i) => `
+          <div class="candidate-card position-${i + 1}" data-position="${i + 1}" data-votes="${candidate.votes}">
+            ${i === 0 ? '<div class="crown-emoji">👑</div>' : ''}
+            <div class="position-ribbon">${getPositionLabel(i + 1)}</div>
+            <div class="photo-container">
+              <span class="initials">${candidate.initials}</span>
+              <img src="${candidate.photoUrl}" alt="${candidate.name}" loading="lazy" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+            </div>
+            <div class="votes-display">
+              <h3 class="candidate-name">${candidate.name}</h3>
+              <div class="vote-row">
+                <span class="votes-label">Online Votes:</span>
+                <span class="votes-count" data-target="${candidate.onlineVotes}">0</span>
+              </div>
+              <div class="vote-row">
+                <span class="votes-label">Physical Votes:</span>
+                <span class="votes-count" data-target="${candidate.physicalVotes}">0</span>
+              </div>
+              <div class="vote-row total">
+                <span class="votes-label total-label">Total Votes:</span>
+                <span class="votes-count total-count" data-target="${candidate.votes}">0</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// Calculate total votes
+function calculateTotalVotes(data) {
+  let overallTotal = 0;
+  
+  data.positions.forEach(position => {
+    let positionTotal = 0;
+    
+    position.candidates.forEach(candidate => {
+      const onlineVotes = candidate.online_votes || 0;
+      const physicalVotes = candidate.physical_votes || 0;
+      
+      candidate.total_votes = onlineVotes + physicalVotes;
+      positionTotal += candidate.total_votes;
+      
+      candidate.online_votes = onlineVotes;
+      candidate.physical_votes = physicalVotes;
+    });
+    
+    position.candidates.sort((a, b) => b.total_votes - a.total_votes);
+    position.total_votes_cast = positionTotal;
+    overallTotal += positionTotal;
+  });
+  
+  data.total_votes_across_all_positions = overallTotal;
+  return data;
+}
+
+// Modal management
 let currentCandidateIndex = 0;
 
 function showModal(pageIndex) {
-    if (pages.length === 0 || pages[pageIndex].candidates.length === 0) return;
-    
-    showingModal = true;
-    currentCandidateIndex = 0;
-    const page = pages[pageIndex];
-    
-    showCandidateInModal(page, 0);
+  if (state.pages.length === 0 || state.pages[pageIndex].candidates.length === 0) return;
+  
+  state.showingModal = true;
+  currentCandidateIndex = 0;
+  const page = state.pages[pageIndex];
+  
+  showCandidateInModal(page, 0);
 }
 
 function showCandidateInModal(page, candidateIndex) {
-    const modal = document.getElementById('fullscreenModal');
-    const modalBody = document.querySelector('.modal-body-optimized');
-    const candidate = page.candidates[candidateIndex];
-    const isWinner = candidateIndex === 0;
+  const modal = document.getElementById('fullscreenModal');
+  const modalBody = document.querySelector('.modal-body-optimized');
+  const candidate = page.candidates[candidateIndex];
+  const isWinner = candidateIndex === 0;
+  
+  const slideDirection = candidateIndex % 2 === 0 ? 'right' : 'left';
+  
+  if (candidateIndex > 0) {
+    cancelAllAnimations();
+    modalBody.classList.add(`slide-out-${slideDirection === 'right' ? 'left' : 'right'}`);
     
-    const slideDirection = candidateIndex % 2 === 0 ? 'right' : 'left';
-    
-    if (candidateIndex > 0) {
-        // Cancel any ongoing animations before transition
-        cancelAllAnimations();
-        
-        modalBody.classList.add(`slide-out-${slideDirection === 'right' ? 'left' : 'right'}`);
-        
-        setTimeout(() => {
-            modalBody.classList.remove(`slide-out-${slideDirection === 'right' ? 'left' : 'right'}`);
-            updateModalContent(page, candidate, candidateIndex, isWinner);
-            modalBody.classList.add(`slide-in-${slideDirection}`);
-            
-            setTimeout(() => {
-                modalBody.classList.remove(`slide-in-${slideDirection}`);
-            }, 400); // Reduced from 500
-        }, 400); // Reduced from 500
+    setTimeout(() => {
+      modalBody.classList.remove(`slide-out-${slideDirection === 'right' ? 'left' : 'right'}`);
+      updateModalContent(page, candidate, candidateIndex, isWinner);
+      modalBody.classList.add(`slide-in-${slideDirection}`);
+      
+      setTimeout(() => {
+        modalBody.classList.remove(`slide-in-${slideDirection}`);
+      }, 350);
+    }, 350);
+  } else {
+    updateModalContent(page, candidate, candidateIndex, isWinner);
+  }
+  
+  if (!modal.classList.contains('active')) {
+    modal.classList.add('active');
+  }
+  
+  if (isWinner) {
+    setTimeout(() => createConfetti(), 100);
+  }
+  
+  clearTimeout(state.timers.modal);
+  
+  state.timers.modal = setTimeout(() => {
+    if (candidateIndex < page.candidates.length - 1) {
+      showCandidateInModal(page, candidateIndex + 1);
     } else {
-        updateModalContent(page, candidate, candidateIndex, isWinner);
+      hideModal();
+      setTimeout(() => showCongratulationsModal(page), 500);
     }
-    
-    if (!modal.classList.contains('active')) {
-        modal.classList.add('active');
-    }
-    
-    if (isWinner) {
-        setTimeout(() => {
-            createConfetti();
-        }, 100);
-    }
-    
-    clearTimeout(modalTimer);
-    
-    modalTimer = setTimeout(() => {
-        if (candidateIndex < page.candidates.length - 1) {
-            showCandidateInModal(page, candidateIndex + 1);
-        } else {
-            hideModal();
-            setTimeout(() => {
-                showCongratulationsModal(page);
-            }, 500);
-        }
-    }, 20000);
+  }, 20000);
 }
 
 function updateModalContent(page, candidate, candidateIndex, isWinner) {
-    // Batch DOM updates
-    const updates = [];
+  // Cache DOM elements
+  const modalHeaderTitle = document.getElementById('modalHeaderTitle');
+  const modalHeaderSubtitle = document.getElementById('modalHeaderSubtitle');
+  
+  // Batch style updates
+  if (isWinner) {
+    modalHeaderTitle.style.display = 'block';
+    modalHeaderSubtitle.style.display = 'block';
+  } else {
+    modalHeaderTitle.style.display = 'none';
+    modalHeaderSubtitle.style.display = 'none';
+  }
+  
+  document.getElementById('modalPositionTitle').textContent = page.title;
+  
+  const rankBadges = { 0: '🥇', 1: '🥈', 2: '🥉' };
+  const rankBadge = rankBadges[candidateIndex] || `${candidateIndex + 1}th`;
+  document.getElementById('candidateRankBadge').textContent = rankBadge;
+  
+  document.getElementById('candidateInitials').textContent = candidate.initials;
+  const photoElement = document.getElementById('candidatePhoto');
+  photoElement.src = candidate.photoUrl;
+  photoElement.alt = candidate.name;
+  photoElement.onload = () => {
+    document.getElementById('candidateInitials').style.display = 'none';
+  };
+  photoElement.onerror = () => {
+    photoElement.style.display = 'none';
+    document.getElementById('candidateInitials').style.display = 'flex';
+  };
+  
+  document.getElementById('candidateName').textContent = candidate.name;
+  
+  // Gender stats
+  if (candidate.votesByGender) {
+    const maleVotes = candidate.votesByGender.male;
+    const femaleVotes = candidate.votesByGender.female;
     
-    const modalHeaderTitle = document.getElementById('modalHeaderTitle');
-    const modalHeaderSubtitle = document.getElementById('modalHeaderSubtitle');
-    if (isWinner) {
-        modalHeaderTitle.style.display = 'block';
-        modalHeaderSubtitle.style.display = 'block';
-    } else {
-        modalHeaderTitle.style.display = 'none';
-        modalHeaderSubtitle.style.display = 'none';
-    }
+    const maleStatsEl = document.getElementById('maleStats');
+    const femaleStatsEl = document.getElementById('femaleStats');
     
-    document.getElementById('modalPositionTitle').textContent = page.title;
-    
-    const rankBadges = {
-        0: '🥇',
-        1: '🥈',
-        2: '🥉'
-    };
-    const rankBadge = rankBadges[candidateIndex] || `${candidateIndex + 1}th`;
-    document.getElementById('candidateRankBadge').textContent = rankBadge;
-    
-    document.getElementById('candidateInitials').textContent = candidate.initials;
-    const photoElement = document.getElementById('candidatePhoto');
-    photoElement.src = candidate.photoUrl;
-    photoElement.alt = candidate.name;
-    photoElement.onload = function() {
-        document.getElementById('candidateInitials').style.display = 'none';
-    };
-    photoElement.onerror = function() {
-        this.style.display = 'none';
-        document.getElementById('candidateInitials').style.display = 'flex';
-    };
-    
-    document.getElementById('candidateName').textContent = candidate.name;
-    
-    if (candidate.votesByGender) {
-        const maleVotes = candidate.votesByGender.male;
-        const femaleVotes = candidate.votesByGender.female;
-        
-        const maleStatsEl = document.getElementById('maleStats');
-        const femaleStatsEl = document.getElementById('femaleStats');
-        
-        maleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${maleVotes}">0</strong> Boy${maleVotes !== 1 ? 's' : ''}`;
-        femaleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${femaleVotes}">0</strong> Girl${femaleVotes !== 1 ? 's' : ''}`;
-        
-        setTimeout(() => {
-            const genderCounts = document.querySelectorAll('.gender-vote-count');
-            genderCounts.forEach((el, index) => {
-                const target = parseInt(el.dataset.target);
-                el.classList.add('animated');
-                setTimeout(() => {
-                    animateCount(el, 0, target, 800); // Reduced from 1000
-                }, index * 150); // Reduced from 200
-            });
-        }, 200); // Reduced from 300
-    }
-    
-    // Build Stream Analysis Grid Table
-    const streamGridTable = document.getElementById('streamGridTable');
-    streamGridTable.innerHTML = '';
-    
-    if (candidate.votesByStream) {
-        const streamEntries = Object.entries(candidate.votesByStream).sort((a, b) => b[1] - a[1]);
-        const totalStreams = streamEntries.length;
-        
-        let columns = 3;
-        if (totalStreams <= 6) columns = 2;
-        if (totalStreams <= 3) columns = 1;
-        
-        const rows = Math.ceil(totalStreams / columns);
-        const fragment = document.createDocumentFragment();
-        
-        for (let row = 0; row < rows; row++) {
-            const tr = document.createElement('tr');
-            
-            for (let col = 0; col < columns; col++) {
-                const index = row * columns + col;
-                
-                if (index < totalStreams) {
-                    const [stream, votes] = streamEntries[index];
-                    
-                    const nameCell = document.createElement('td');
-                    nameCell.className = 'stream-name';
-                    nameCell.textContent = stream;
-                    tr.appendChild(nameCell);
-                    
-                    const voteCell = document.createElement('td');
-                    voteCell.className = 'vote-count stream-vote-count';
-                    voteCell.dataset.target = votes;
-                    voteCell.textContent = '0';
-                    tr.appendChild(voteCell);
-                } else {
-                    const emptyName = document.createElement('td');
-                    emptyName.style.border = 'none';
-                    emptyName.style.background = 'transparent';
-                    tr.appendChild(emptyName);
-                    
-                    const emptyVote = document.createElement('td');
-                    emptyVote.style.border = 'none';
-                    emptyVote.style.background = 'transparent';
-                    tr.appendChild(emptyVote);
-                }
-            }
-            fragment.appendChild(tr);
-        }
-        
-        streamGridTable.appendChild(fragment);
-        
-        setTimeout(() => {
-            const streamVoteCounts = document.querySelectorAll('.stream-vote-count');
-            streamVoteCounts.forEach((el, index) => {
-                const target = parseInt(el.dataset.target);
-                setTimeout(() => {
-                    el.classList.add('animated');
-                    animateCount(el, 0, target, 1000); // Reduced from 1200
-                }, index * 60); // Reduced from 80
-            });
-        }, 400); // Reduced from 500
-    }
-    
-    document.getElementById('onlineTotal').dataset.target = candidate.onlineVotes;
-    document.getElementById('onlineTotal').textContent = '0';
-    document.getElementById('physicalTotal').dataset.target = candidate.physicalVotes;
-    document.getElementById('physicalTotal').textContent = '0';
-    document.getElementById('grandTotal').dataset.target = candidate.votes;
-    document.getElementById('grandTotal').textContent = '0';
+    maleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${maleVotes}">0</strong> Boy${maleVotes !== 1 ? 's' : ''}`;
+    femaleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${femaleVotes}">0</strong> Girl${femaleVotes !== 1 ? 's' : ''}`;
     
     setTimeout(() => {
-        animateModalVotes();
-    }, 500); // Reduced from 700
+      const genderCounts = document.querySelectorAll('.gender-vote-count');
+      let delay = 0;
+      genderCounts.forEach((el) => {
+        const target = parseInt(el.dataset.target);
+        el.classList.add('animated');
+        setTimeout(() => animateCount(el, 0, target, 700), delay);
+        delay += 120;
+      });
+    }, 150);
+  }
+  
+  // Stream analysis grid
+  const streamGridTable = document.getElementById('streamGridTable');
+  streamGridTable.innerHTML = '';
+  
+  if (candidate.votesByStream) {
+    const streamEntries = Object.entries(candidate.votesByStream).sort((a, b) => b[1] - a[1]);
+    const totalStreams = streamEntries.length;
+    
+    let columns = totalStreams <= 3 ? 1 : totalStreams <= 6 ? 2 : 3;
+    const rows = Math.ceil(totalStreams / columns);
+    const fragment = document.createDocumentFragment();
+    
+    for (let row = 0; row < rows; row++) {
+      const tr = document.createElement('tr');
+      
+      for (let col = 0; col < columns; col++) {
+        const index = row * columns + col;
+        
+        if (index < totalStreams) {
+          const [stream, votes] = streamEntries[index];
+          
+          const nameCell = document.createElement('td');
+          nameCell.className = 'stream-name';
+          nameCell.textContent = stream;
+          tr.appendChild(nameCell);
+          
+          const voteCell = document.createElement('td');
+          voteCell.className = 'vote-count stream-vote-count';
+          voteCell.dataset.target = votes;
+          voteCell.textContent = '0';
+          tr.appendChild(voteCell);
+        } else {
+          const emptyName = document.createElement('td');
+          emptyName.style.cssText = 'border:none;background:transparent';
+          tr.appendChild(emptyName);
+          
+          const emptyVote = document.createElement('td');
+          emptyVote.style.cssText = 'border:none;background:transparent';
+          tr.appendChild(emptyVote);
+        }
+      }
+      fragment.appendChild(tr);
+    }
+    
+    streamGridTable.appendChild(fragment);
+    
+    setTimeout(() => {
+      const streamVoteCounts = document.querySelectorAll('.stream-vote-count');
+      let delay = 0;
+      streamVoteCounts.forEach((el) => {
+        const target = parseInt(el.dataset.target);
+        setTimeout(() => {
+          el.classList.add('animated');
+          animateCount(el, 0, target, 900);
+        }, delay);
+        delay += 50;
+      });
+    }, 350);
+  }
+  
+  // Vote totals
+  document.getElementById('onlineTotal').dataset.target = candidate.onlineVotes;
+  document.getElementById('onlineTotal').textContent = '0';
+  document.getElementById('physicalTotal').dataset.target = candidate.physicalVotes;
+  document.getElementById('physicalTotal').textContent = '0';
+  document.getElementById('grandTotal').dataset.target = candidate.votes;
+  document.getElementById('grandTotal').textContent = '0';
+  
+  setTimeout(() => animateModalVotes(), 450);
 }
 
 function showCongratulationsModal(page) {
-    if (page.candidates.length < 2) {
-        setTimeout(() => {
-            nextPage();
-        }, 500);
-        return;
-    }
-    
-    showingCongratsModal = true;
-    const modal = document.getElementById('congratulationsModal');
-    const congratsCandidates = document.getElementById('congratsCandidates');
-    const congratsPositionTitle = document.getElementById('congratsPositionTitle');
-    
-    const firstCandidate = page.candidates[0];
-    const lastCandidate = page.candidates[page.candidates.length - 1];
-    
-    congratsPositionTitle.textContent = page.title;
-    
-    const congratsGif = 'goat-a-goat.gif'; 
-    const comfortImage = 'a-goat-pilgor.gif';
-    
-    congratsCandidates.innerHTML = `
-        <div class="congrats-candidate-section winner">
-            <div class="winner-crown">👑</div>
-            <div class="congrats-candidate-grid">
-                <div class="congrats-candidate-info">
-                    <div class="congrats-photo-container">
-                        <span class="initials">${firstCandidate.initials}</span>
-                        <img src="${firstCandidate.photoUrl}" alt="${firstCandidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
-                    </div>
-                    <div class="congrats-details">
-                        <div class="congrats-rank-badge">🥇 Winner</div>
-                        <h3 class="congrats-candidate-name">${firstCandidate.name}</h3>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Online Votes:</span>
-                            <span class="congrats-vote-count">${firstCandidate.onlineVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Physical Votes:</span>
-                            <span class="congrats-vote-count">${firstCandidate.physicalVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row total">
-                            <span class="congrats-vote-label">Total Votes:</span>
-                            <span class="congrats-vote-count">${firstCandidate.votes.toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="congrats-celebration">
-                    <img src="${congratsGif}" alt="Congratulations">
-                </div>
+  if (page.candidates.length < 2) {
+    setTimeout(() => nextPage(), 500);
+    return;
+  }
+  
+  state.showingCongratsModal = true;
+  const modal = document.getElementById('congratulationsModal');
+  const congratsCandidates = document.getElementById('congratsCandidates');
+  const congratsPositionTitle = document.getElementById('congratsPositionTitle');
+  
+  const firstCandidate = page.candidates[0];
+  const lastCandidate = page.candidates[page.candidates.length - 1];
+  
+  congratsPositionTitle.textContent = page.title;
+  
+  const congratsGif = 'goat-a-goat.gif';
+  const comfortImage = 'a-goat-pilgor.gif';
+  
+  congratsCandidates.innerHTML = `
+    <div class="congrats-candidate-section winner">
+      <div class="winner-crown">👑</div>
+      <div class="congrats-candidate-grid">
+        <div class="congrats-candidate-info">
+          <div class="congrats-photo-container">
+            <span class="initials">${firstCandidate.initials}</span>
+            <img src="${firstCandidate.photoUrl}" alt="${firstCandidate.name}" loading="eager" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+          </div>
+          <div class="congrats-details">
+            <div class="congrats-rank-badge">🥇 Winner</div>
+            <h3 class="congrats-candidate-name">${firstCandidate.name}</h3>
+            <div class="congrats-vote-row">
+              <span class="congrats-vote-label">Online Votes:</span>
+              <span class="congrats-vote-count">${firstCandidate.onlineVotes.toLocaleString()}</span>
             </div>
+            <div class="congrats-vote-row">
+              <span class="congrats-vote-label">Physical Votes:</span>
+              <span class="congrats-vote-count">${firstCandidate.physicalVotes.toLocaleString()}</span>
+            </div>
+            <div class="congrats-vote-row total">
+              <span class="congrats-vote-label">Total Votes:</span>
+              <span class="congrats-vote-count">${firstCandidate.votes.toLocaleString()}</span>
+            </div>
+          </div>
         </div>
+        <div class="congrats-celebration">
+          <img src="${congratsGif}" alt="Congratulations" loading="eager">
+        </div>
+      </div>
+    </div>
 
-        <div class="congrats-candidate-section last">
-            <div class="congrats-candidate-grid">
-                <div class="congrats-candidate-info">
-                    <div class="congrats-photo-container">
-                        <span class="initials">${lastCandidate.initials}</span>
-                        <img src="${lastCandidate.photoUrl}" alt="${lastCandidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
-                    </div>
-                    <div class="congrats-details">
-                        <div class="congrats-rank-badge">Last Position</div>
-                        <h3 class="congrats-candidate-name">${lastCandidate.name}</h3>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Online Votes:</span>
-                            <span class="congrats-vote-count">${lastCandidate.onlineVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Physical Votes:</span>
-                            <span class="congrats-vote-count">${lastCandidate.physicalVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row total">
-                            <span class="congrats-vote-label">Total Votes:</span>
-                            <span class="congrats-vote-count">${lastCandidate.votes.toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="congrats-celebration">
-                    <img src="${comfortImage}" alt="Better luck next time">
-                </div>
+    <div class="congrats-candidate-section last">
+      <div class="congrats-candidate-grid">
+        <div class="congrats-candidate-info">
+          <div class="congrats-photo-container">
+            <span class="initials">${lastCandidate.initials}</span>
+            <img src="${lastCandidate.photoUrl}" alt="${lastCandidate.name}" loading="eager" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+          </div>
+          <div class="congrats-details">
+            <div class="congrats-rank-badge">Last Position</div>
+            <h3 class="congrats-candidate-name">${lastCandidate.name}</h3>
+            <div class="congrats-vote-row">
+              <span class="congrats-vote-label">Online Votes:</span>
+              <span class="congrats-vote-count">${lastCandidate.onlineVotes.toLocaleString()}</span>
             </div>
+            <div class="congrats-vote-row">
+              <span class="congrats-vote-label">Physical Votes:</span>
+              <span class="congrats-vote-count">${lastCandidate.physicalVotes.toLocaleString()}</span>
+            </div>
+            <div class="congrats-vote-row total">
+              <span class="congrats-vote-label">Total Votes:</span>
+              <span class="congrats-vote-count">${lastCandidate.votes.toLocaleString()}</span>
+            </div>
+          </div>
         </div>
-    `;
-    
-    modal.classList.add('active');
-    
-    // Preload GIFs to ensure they play
+        <div class="congrats-celebration">
+          <img src="${comfortImage}" alt="Better luck next time" loading="eager">
+        </div>
+      </div>
+    </div>
+  `;
+  
+  modal.classList.add('active');
+  
+  // Force GIF reload efficiently
+  requestAnimationFrame(() => {
     const gifImages = modal.querySelectorAll('.congrats-celebration img');
     gifImages.forEach(img => {
-        // Force reload to restart GIF
-        const src = img.src;
-        img.src = '';
-        img.src = src;
+      const src = img.src;
+      img.src = '';
+      requestAnimationFrame(() => img.src = src);
     });
+  });
+  
+  state.countdowns.congrats = 10;
+  document.getElementById('congratsCountdown').textContent = state.countdowns.congrats;
+  
+  clearInterval(state.timers.congratsCountdown);
+  state.timers.congratsCountdown = setInterval(() => {
+    state.countdowns.congrats--;
+    document.getElementById('congratsCountdown').textContent = state.countdowns.congrats;
     
-    congratsCountdown = 10;
-    document.getElementById('congratsCountdown').textContent = congratsCountdown;
-    
-    clearInterval(congratsCountdownTimer);
-    congratsCountdownTimer = setInterval(() => {
-        congratsCountdown--;
-        document.getElementById('congratsCountdown').textContent = congratsCountdown;
-        
-        if (congratsCountdown <= 0) {
-            clearInterval(congratsCountdownTimer);
-        }
-    }, 1000);
-    
-    clearTimeout(modalTimer);
-    modalTimer = setTimeout(() => {
-        hideCongratulationsModal();
-    }, 10000);
+    if (state.countdowns.congrats <= 0) {
+      clearInterval(state.timers.congratsCountdown);
+    }
+  }, 1000);
+  
+  clearTimeout(state.timers.modal);
+  state.timers.modal = setTimeout(() => hideCongratulationsModal(), 10000);
 }
 
 function hideCongratulationsModal() {
-    const modal = document.getElementById('congratulationsModal');
-    modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
-    
-    setTimeout(() => {
-        modal.classList.remove('active');
-        modal.style.animation = '';
-        showingCongratsModal = false;
-        
-        setTimeout(() => {
-            nextPage();
-        }, 500);
-    }, 500);
+  const modal = document.getElementById('congratulationsModal');
+  modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
+  
+  setTimeout(() => {
+    modal.classList.remove('active');
+    modal.style.animation = '';
+    state.showingCongratsModal = false;
+    setTimeout(() => nextPage(), 500);
+  }, 500);
 }
 
 function hideModal() {
-    const modal = document.getElementById('fullscreenModal');
-    
-    // Cancel all animations before hiding
-    cancelAllAnimations();
-    
-    const confettiElements = document.querySelectorAll('.confetti');
-    confettiElements.forEach(c => c.remove());
-    
-    modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
-    
-    setTimeout(() => {
-        modal.classList.remove('active');
-        modal.style.animation = '';
-        showingModal = false;
-        
-        setTimeout(() => {
-            nextPage();
-        }, 500);
-    }, 500);
+  const modal = document.getElementById('fullscreenModal');
+  
+  cancelAllAnimations();
+  
+  const confettiElements = document.querySelectorAll('.confetti');
+  confettiElements.forEach(c => c.remove());
+  
+  modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
+  
+  setTimeout(() => {
+    modal.classList.remove('active');
+    modal.style.animation = '';
+    state.showingModal = false;
+    setTimeout(() => nextPage(), 500);
+  }, 500);
 }
 
+// Page initialization
 function initializePages() {
-    if (pages.length === 0) return;
+  if (state.pages.length === 0) return;
 
-    const container = document.getElementById('pagesContainer');
-    const pagination = document.getElementById('pagination');
-    
-    container.innerHTML = pages.map((page, index) => createPageHTML(page, index)).join('');
-    
-    if (pages.length > 1) {
-        pagination.innerHTML = pages.map((_, index) => 
-            `<button class="page-btn ${index === 0 ? 'active' : ''}" data-page="${index}">${index + 1}</button>`
-        ).join('');
+  const container = document.getElementById('pagesContainer');
+  const pagination = document.getElementById('pagination');
+  
+  // Use document fragment for batch DOM insertion
+  container.innerHTML = state.pages.map((page, index) => createPageHTML(page, index)).join('');
+  
+  if (state.pages.length > 1) {
+    pagination.innerHTML = state.pages.map((_, index) => 
+      `<button class="page-btn ${index === 0 ? 'active' : ''}" data-page="${index}">${index + 1}</button>`
+    ).join('');
 
-        document.querySelectorAll('.page-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                goToPage(parseInt(btn.dataset.page));
-            });
-        });
+    // Use event delegation for better performance
+    pagination.addEventListener('click', (e) => {
+      if (e.target.classList.contains('page-btn')) {
+        goToPage(parseInt(e.target.dataset.page));
+      }
+    });
 
-        startAutoScroll();
-    } else {
-        pagination.innerHTML = '';
-    }
+    startAutoScroll();
+  } else {
+    pagination.innerHTML = '';
+  }
 
-    setTimeout(() => {
-        animatePageCounts(0);
-        setTimeout(() => {
-            showModal(0);
-        }, 10000);
-    }, 100);
+  // Delayed animation initialization
+  requestAnimationFrame(() => {
+    animatePageCounts(0);
+    setTimeout(() => showModal(0), 10000);
+  });
 }
 
 function startAutoScroll() {
-    clearInterval(autoScrollTimer);
+  clearInterval(state.timers.autoScroll);
 }
 
 function nextPage() {
-    if (pages.length === 0 || showingModal) return;
-    const nextPageIndex = (currentPage + 1) % pages.length;
-    goToPage(nextPageIndex, true);
+  if (state.pages.length === 0 || state.showingModal) return;
+  const nextPageIndex = (state.currentPage + 1) % state.pages.length;
+  goToPage(nextPageIndex, true);
 }
 
 function previousPage() {
-    if (pages.length === 0 || showingModal) return;
-    const prevPageIndex = (currentPage - 1 + pages.length) % pages.length;
-    goToPage(prevPageIndex, false);
+  if (state.pages.length === 0 || state.showingModal) return;
+  const prevPageIndex = (state.currentPage - 1 + state.pages.length) % state.pages.length;
+  goToPage(prevPageIndex, false);
 }
 
 function goToPage(pageIndex, showModalAfter = true) {
-    if (isTransitioning || pageIndex === currentPage || pages.length === 0) return;
-    
-    isTransitioning = true;
-    
-    // Cancel all animations before page transition
-    cancelAllAnimations();
-    
-    const oldPage = currentPage;
-    const transition = transitions[Math.floor(Math.random() * transitions.length)];
-    
-    const oldContent = document.querySelector(`.page-content[data-page="${oldPage}"]`);
-    const newContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
-    
-    const newVoteCounts = newContent.querySelectorAll('.votes-count');
-    newVoteCounts.forEach(count => {
-        count.textContent = '0';
-    });
-    
-    if (oldContent) {
-        oldContent.style.animationName = transition.out;
-        
-        setTimeout(() => {
-            oldContent.classList.remove('active');
-            oldContent.style.animationName = '';
-        }, 600); // Reduced from 800
-    }
+  if (state.isTransitioning || pageIndex === state.currentPage || state.pages.length === 0) return;
+  
+  state.isTransitioning = true;
+  cancelAllAnimations();
+  
+  const oldPage = state.currentPage;
+  const transition = transitions[Math.floor(Math.random() * transitions.length)];
+  
+  const oldContent = document.querySelector(`.page-content[data-page="${oldPage}"]`);
+  const newContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+  
+  // Reset vote counts efficiently
+  const newVoteCounts = newContent.querySelectorAll('.votes-count');
+  newVoteCounts.forEach(count => count.textContent = '0');
+  
+  if (oldContent) {
+    oldContent.style.animationName = transition.out;
     
     setTimeout(() => {
-        currentPage = pageIndex;
-        newContent.classList.add('active');
-        newContent.style.animationName = transition.in;
-        
-        setTimeout(() => {
-            animatePageCounts(pageIndex);
-        }, 200); // Reduced from 300
-        
-        setTimeout(() => {
-            newContent.style.animationName = '';
-            isTransitioning = false;
-        }, 600); // Reduced from 800
-        
-        document.querySelectorAll('.page-btn').forEach((btn, index) => {
-            btn.classList.toggle('active', index === pageIndex);
-        });
-        
-        if (showModalAfter) {
-            setTimeout(() => {
-                showModal(pageIndex);
-            }, 10000);
-        }
-    }, 100);
+      oldContent.classList.remove('active');
+      oldContent.style.animationName = '';
+    }, 500);
+  }
+  
+  setTimeout(() => {
+    state.currentPage = pageIndex;
+    newContent.classList.add('active');
+    newContent.style.animationName = transition.in;
+    
+    requestAnimationFrame(() => {
+      setTimeout(() => animatePageCounts(pageIndex), 150);
+    });
+    
+    setTimeout(() => {
+      newContent.style.animationName = '';
+      state.isTransitioning = false;
+    }, 500);
+    
+    // Batch update pagination buttons
+    const pageButtons = document.querySelectorAll('.page-btn');
+    pageButtons.forEach((btn, index) => {
+      btn.classList.toggle('active', index === pageIndex);
+    });
+    
+    if (showModalAfter) {
+      setTimeout(() => showModal(pageIndex), 10000);
+    }
+  }, 100);
 }
 
 function populateFilterDropdown() {
-    const select = document.getElementById('positionFilter');
-    select.innerHTML = '<option value="">All Positions</option>';
-    
-    ELECTORAL_DATA.positions.forEach(position => {
-        const option = document.createElement('option');
-        option.value = position.position;
-        option.textContent = `${position.position} (${position.total_votes_cast} votes)`;
-        select.appendChild(option);
-    });
-    
-    select.addEventListener('change', function() {
-        if (this.value) {
-            filterByPosition(this.value);
-        } else {
-            showAllPositions();
-        }
-    });
+  const select = document.getElementById('positionFilter');
+  select.innerHTML = '<option value="">All Positions</option>';
+  
+  const fragment = document.createDocumentFragment();
+  
+  ELECTORAL_DATA.positions.forEach(position => {
+    const option = document.createElement('option');
+    option.value = position.position;
+    option.textContent = `${position.position} (${position.total_votes_cast} votes)`;
+    fragment.appendChild(option);
+  });
+  
+  select.appendChild(fragment);
+  
+  select.addEventListener('change', function() {
+    if (this.value) {
+      filterByPosition(this.value);
+    } else {
+      showAllPositions();
+    }
+  });
 }
 
 function filterByPosition(positionName) {
-    clearInterval(autoScrollTimer);
-    clearTimeout(modalTimer);
-    clearInterval(modalCountdownTimer);
-    cancelAllAnimations();
-    pages = allPages.filter(page => page.title === positionName);
-    currentPage = 0;
-    initializePages();
+  clearInterval(state.timers.autoScroll);
+  clearAllTimers();
+  cancelAllAnimations();
+  state.pages = state.allPages.filter(page => page.title === positionName);
+  state.currentPage = 0;
+  initializePages();
 }
 
 function showAllPositions() {
-    document.getElementById('positionFilter').value = '';
-    clearTimeout(modalTimer);
-    clearInterval(modalCountdownTimer);
-    cancelAllAnimations();
-    pages = [...allPages];
-    currentPage = 0;
-    initializePages();
+  document.getElementById('positionFilter').value = '';
+  clearAllTimers();
+  cancelAllAnimations();
+  state.pages = [...state.allPages];
+  state.currentPage = 0;
+  initializePages();
 }
 
 function loadElectoralData() {
-    console.log('Loading hardcoded electoral data...');
-    
-    const processedData = calculateTotalVotes(ELECTORAL_DATA);
-    
-    allPages = processedData.positions.map(position => {
-        const candidates = position.candidates.map(candidate => ({
-            name: candidate.candidate_name,
-            votes: candidate.total_votes,
-            onlineVotes: candidate.online_votes || 0,
-            physicalVotes: candidate.physical_votes || 0,
-            votesByGender: candidate.votes_by_gender || null,
-            votesByStream: candidate.votes_by_stream || null,
-            initials: getInitials(candidate.candidate_name),
-            photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
-        }));
+  console.log('Loading hardcoded electoral data...');
+  
+  const processedData = calculateTotalVotes(ELECTORAL_DATA);
+  
+  state.allPages = processedData.positions.map(position => {
+    const candidates = position.candidates.map(candidate => ({
+      name: candidate.candidate_name,
+      votes: candidate.total_votes,
+      onlineVotes: candidate.online_votes || 0,
+      physicalVotes: candidate.physical_votes || 0,
+      votesByGender: candidate.votes_by_gender || null,
+      votesByStream: candidate.votes_by_stream || null,
+      initials: getInitials(candidate.candidate_name),
+      photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
+    }));
 
-        return {
-            title: position.position,
-            candidates: candidates
-        };
-    });
-    
-    pages = [...allPages];
-    populateFilterDropdown();
-    initializePages();
-    
-    console.log(`Loaded ${processedData.total_positions} positions with ${processedData.total_votes_across_all_positions} total votes`);
+    return {
+      title: position.position,
+      candidates: candidates
+    };
+  });
+  
+  state.pages = [...state.allPages];
+  populateFilterDropdown();
+  initializePages();
+  
+  console.log(`Loaded ${processedData.total_positions} positions with ${processedData.total_votes_across_all_positions} total votes`);
 }
 
 function keepAwake() {
-    if ('wakeLock' in navigator) {
-        navigator.wakeLock.request('screen').catch(err => {
-            console.log('Wake Lock error:', err);
-        });
-    }
-}
-
-function preloadImages() {
-    // Use passive image loading
-    const images = [];
-    allPages.forEach(page => {
-        page.candidates.forEach(candidate => {
-            const img = new Image();
-            img.src = candidate.photoUrl;
-            images.push(img);
-        });
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch(err => {
+      console.log('Wake Lock error:', err);
     });
+  }
 }
 
+// Optimized image preloading with IntersectionObserver
+function preloadImages() {
+  // Only preload first page images immediately
+  const firstPageCandidates = state.allPages[0]?.candidates || [];
+  firstPageCandidates.forEach(candidate => {
+    const img = new Image();
+    img.src = candidate.photoUrl;
+  });
+  
+  // Lazy load remaining images
+  setTimeout(() => {
+    state.allPages.slice(1).forEach(page => {
+      page.candidates.forEach(candidate => {
+        const img = new Image();
+        img.loading = 'lazy';
+        img.src = candidate.photoUrl;
+      });
+    });
+  }, 2000);
+}
+
+// Event listeners with passive option for better scroll performance
 window.addEventListener('load', () => {
-    loadElectoralData();
-    keepAwake();
+  loadElectoralData();
+  keepAwake();
+  requestAnimationFrame(() => {
     setTimeout(preloadImages, 1000);
+  });
 });
 
+// Keyboard navigation
 document.addEventListener('keydown', e => {
-    if (pages.length === 0 || showingModal) return;
-    if (e.key === 'ArrowLeft') previousPage();
-    if (e.key === 'ArrowRight') nextPage();
+  if (state.pages.length === 0 || state.showingModal) return;
+  if (e.key === 'ArrowLeft') previousPage();
+  if (e.key === 'ArrowRight') nextPage();
 });
 
+// Touch swipe handling with passive events
 let touchStartX = 0;
 let touchEndX = 0;
 
 function handleSwipe() {
-    if (showingModal) return;
-    const swipeThreshold = 50;
-    if (touchEndX < touchStartX - swipeThreshold) {
-        nextPage();
-    } else if (touchEndX > touchStartX + swipeThreshold) {
-        previousPage();
-    }
+  if (state.showingModal) return;
+  const swipeThreshold = 50;
+  if (touchEndX < touchStartX - swipeThreshold) {
+    nextPage();
+  } else if (touchEndX > touchStartX + swipeThreshold) {
+    previousPage();
+  }
 }
 
 document.addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
+  touchStartX = e.changedTouches[0].screenX;
 }, { passive: true });
 
 document.addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipe();
 }, { passive: true });
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  clearAllTimers();
+  cancelAllAnimations();
+});
   </script>
 </body>
 </html>
