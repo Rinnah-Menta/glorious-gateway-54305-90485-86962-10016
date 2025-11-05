@@ -2246,7 +2246,7 @@
                             <span class="total-value" id="physicalTotal" data-target="0">0</span>
                         </div>
                         <div class="total-item grand">
-                            <span class="total-label">GRAND TOTAL:</span>
+                            <span class="total-label">TOTAL VOTES:</span>
                             <span class="total-value" id="grandTotal" data-target="0">0</span>
                         </div>
                     </div>
@@ -3789,6 +3789,11 @@ const state = {
   countdowns: {
     modal: 10,
     congrats: 10
+  },
+  gifsPreloaded: false,
+  gifCache: {
+    congratsGif: null,
+    comfortGif: null
   }
 };
 
@@ -4124,9 +4129,9 @@ function updateModalContent(page, candidate, candidateIndex, isWinner) {
     const maleStatsEl = document.getElementById('maleStats');
     const femaleStatsEl = document.getElementById('femaleStats');
     
-    maleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${maleVotes}">0</strong> Boy${maleVotes !== 1 ? 's' : ''}`;
-    femaleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${femaleVotes}">0</strong> Girl${femaleVotes !== 1 ? 's' : ''}`;
-    
+    maleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${maleVotes}">0</strong> Boy${maleVotes !== 1 ? 's' : ''} online`;
+femaleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${femaleVotes}">0</strong> Girl${femaleVotes !== 1 ? 's' : ''} online`;
+   
     setTimeout(() => {
       const genderCounts = document.querySelectorAll('.gender-vote-count');
       let delay = 0;
@@ -4532,6 +4537,29 @@ function keepAwake() {
   }
 }
 
+// Preload GIFs once during initialization
+function preloadGifs() {
+  if (state.gifsPreloaded) return;
+  
+  const congratsGif = new Image();
+  const comfortGif = new Image();
+  
+  congratsGif.src = 'goat-a-goat.gif';
+  comfortGif.src = 'a-goat-pilgor.gif';
+  
+  congratsGif.onload = () => {
+    state.gifCache.congratsGif = congratsGif.src;
+    console.log('Congrats GIF preloaded');
+  };
+  
+  comfortGif.onload = () => {
+    state.gifCache.comfortGif = comfortGif.src;
+    console.log('Comfort GIF preloaded');
+  };
+  
+  state.gifsPreloaded = true;
+}
+
 // Optimized image preloading with IntersectionObserver
 function preloadImages() {
   // Only preload first page images immediately
@@ -4557,6 +4585,7 @@ function preloadImages() {
 window.addEventListener('load', () => {
   loadElectoralData();
   keepAwake();
+  preloadGifs(); // Preload GIFs immediately
   requestAnimationFrame(() => {
     setTimeout(preloadImages, 1000);
   });
