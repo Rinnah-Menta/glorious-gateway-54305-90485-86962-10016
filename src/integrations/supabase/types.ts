@@ -117,9 +117,9 @@ export type Database = {
           class_teacher_name: string | null
           class_teacher_tel: string | null
           created_at: string | null
-          id: string | null
+          id: string
           parent_name: string | null
-          parent_tel: string | null
+          parent_tel: number | null
           position: string | null
           sex: string | null
           status: string | null
@@ -137,9 +137,9 @@ export type Database = {
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
           created_at?: string | null
-          id?: string | null
+          id?: string
           parent_name?: string | null
-          parent_tel?: string | null
+          parent_tel?: number | null
           position?: string | null
           sex?: string | null
           status?: string | null
@@ -157,9 +157,9 @@ export type Database = {
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
           created_at?: string | null
-          id?: string | null
+          id?: string
           parent_name?: string | null
-          parent_tel?: string | null
+          parent_tel?: number | null
           position?: string | null
           sex?: string | null
           status?: string | null
@@ -206,95 +206,95 @@ export type Database = {
       electoral_votes: {
         Row: {
           average_mouse_speed: number | null
-          battery_charging: string | null
+          battery_charging: boolean | null
           battery_level: number | null
           behavior_signature: string | null
           browser: string | null
-          candidate_id: string | null
-          candidate_name: string | null
+          candidate_id: string
+          candidate_name: string
           canvas_fingerprint: string | null
           click_count: number | null
           created_at: string | null
           device_type: string | null
-          id: string | null
+          id: string
           installed_fonts: string | null
           ip_address: string | null
           language: string | null
-          latitude: string | null
-          location_accuracy: string | null
-          longitude: string | null
+          latitude: number | null
+          location_accuracy: number | null
+          longitude: number | null
           mouse_movement_count: number | null
           os: string | null
-          position: string | null
+          position: string
           screen_resolution: string | null
           timezone: string | null
-          typing_speed: string | null
+          typing_speed: number | null
           vote_status: string | null
           voted_at: string | null
-          voter_id: string | null
-          voter_name: string | null
+          voter_id: string
+          voter_name: string
           webgl_fingerprint: string | null
         }
         Insert: {
           average_mouse_speed?: number | null
-          battery_charging?: string | null
+          battery_charging?: boolean | null
           battery_level?: number | null
           behavior_signature?: string | null
           browser?: string | null
-          candidate_id?: string | null
-          candidate_name?: string | null
+          candidate_id: string
+          candidate_name: string
           canvas_fingerprint?: string | null
           click_count?: number | null
           created_at?: string | null
           device_type?: string | null
-          id?: string | null
+          id?: string
           installed_fonts?: string | null
           ip_address?: string | null
           language?: string | null
-          latitude?: string | null
-          location_accuracy?: string | null
-          longitude?: string | null
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
           mouse_movement_count?: number | null
           os?: string | null
-          position?: string | null
+          position: string
           screen_resolution?: string | null
           timezone?: string | null
-          typing_speed?: string | null
+          typing_speed?: number | null
           vote_status?: string | null
           voted_at?: string | null
-          voter_id?: string | null
-          voter_name?: string | null
+          voter_id: string
+          voter_name: string
           webgl_fingerprint?: string | null
         }
         Update: {
           average_mouse_speed?: number | null
-          battery_charging?: string | null
+          battery_charging?: boolean | null
           battery_level?: number | null
           behavior_signature?: string | null
           browser?: string | null
-          candidate_id?: string | null
-          candidate_name?: string | null
+          candidate_id?: string
+          candidate_name?: string
           canvas_fingerprint?: string | null
           click_count?: number | null
           created_at?: string | null
           device_type?: string | null
-          id?: string | null
+          id?: string
           installed_fonts?: string | null
           ip_address?: string | null
           language?: string | null
-          latitude?: string | null
-          location_accuracy?: string | null
-          longitude?: string | null
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
           mouse_movement_count?: number | null
           os?: string | null
-          position?: string | null
+          position?: string
           screen_resolution?: string | null
           timezone?: string | null
-          typing_speed?: string | null
+          typing_speed?: number | null
           vote_status?: string | null
           voted_at?: string | null
-          voter_id?: string | null
-          voter_name?: string | null
+          voter_id?: string
+          voter_name?: string
           webgl_fingerprint?: string | null
         }
         Relationships: []
@@ -302,95 +302,56 @@ export type Database = {
       physical_votes: {
         Row: {
           added_at: string | null
-          added_by: string | null
           candidate_id: string
           candidate_name: string
           created_at: string | null
           id: string
           notes: string | null
           position: string
-          updated_at: string | null
           votes_count: number
         }
         Insert: {
           added_at?: string | null
-          added_by?: string | null
           candidate_id: string
           candidate_name: string
           created_at?: string | null
           id?: string
           notes?: string | null
           position: string
-          updated_at?: string | null
           votes_count?: number
         }
         Update: {
           added_at?: string | null
-          added_by?: string | null
           candidate_id?: string
           candidate_name?: string
           created_at?: string | null
           id?: string
           notes?: string | null
           position?: string
-          updated_at?: string | null
           votes_count?: number
         }
         Relationships: []
       }
       streams: {
         Row: {
-          classesTaught: string | null
-          contactNumber: number | null
+          class_id: string | null
           created_at: string | null
-          default_password: number | null
-          email: string | null
           id: string | null
-          is_verified: boolean | null
           name: string | null
-          nationality: string | null
-          password_hash: string | null
-          personal_email: string | null
-          photo: string | null
-          photo_url: string | null
-          sex: string | null
-          subjectsTaught: string | null
           updated_at: string | null
         }
         Insert: {
-          classesTaught?: string | null
-          contactNumber?: number | null
+          class_id?: string | null
           created_at?: string | null
-          default_password?: number | null
-          email?: string | null
           id?: string | null
-          is_verified?: boolean | null
           name?: string | null
-          nationality?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo?: string | null
-          photo_url?: string | null
-          sex?: string | null
-          subjectsTaught?: string | null
           updated_at?: string | null
         }
         Update: {
-          classesTaught?: string | null
-          contactNumber?: number | null
+          class_id?: string | null
           created_at?: string | null
-          default_password?: number | null
-          email?: string | null
           id?: string | null
-          is_verified?: boolean | null
           name?: string | null
-          nationality?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo?: string | null
-          photo_url?: string | null
-          sex?: string | null
-          subjectsTaught?: string | null
           updated_at?: string | null
         }
         Relationships: []
