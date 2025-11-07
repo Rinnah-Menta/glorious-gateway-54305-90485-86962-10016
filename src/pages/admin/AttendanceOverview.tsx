@@ -78,7 +78,8 @@ const AttendanceOverview = () => {
         .select('id, name, email, class_id, stream_id, photo_url')
         .order('class_id')
         .order('stream_id')
-        .order('name');
+        .order('name')
+        .range(0, Math.max((totalCount || 0) - 1, 0));
       
       if (error) throw error;
       
