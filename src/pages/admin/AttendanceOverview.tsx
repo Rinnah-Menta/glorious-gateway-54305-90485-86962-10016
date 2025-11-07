@@ -78,8 +78,7 @@ const AttendanceOverview = () => {
         .select('id, name, email, class_id, stream_id, photo_url')
         .order('class_id')
         .order('stream_id')
-        .order('name')
-        .limit(10000);
+        .order('name');
       
       if (error) throw error;
       
