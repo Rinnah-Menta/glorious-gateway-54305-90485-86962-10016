@@ -94,19 +94,52 @@ const AttendanceOverview = () => {
       
       setAllStudents(formattedStudents);
       
-      // Build class list from database students
-      const classMap = new Map();
-      formattedStudents.forEach(student => {
-        if (!classMap.has(student.stream)) {
-          classMap.set(student.stream, {
-            id: student.stream,
-            name: student.stream.replace('-', ' - '),
+      // Build class list from streams table to ensure all streams (including P7) appear
+      const { data: streams, error: streamsError } = await supabase
+        .from('streams')
+        .select('id, name, class_id')
+        .order('class_id')
+        .order('name');
+
+      if (!streamsError && streams) {
+        const classMap = new Map();
+        // Initialize all streams
+        streams.forEach((stream: any) => {
+          classMap.set(stream.id, {
+            id: stream.id,
+            name: (stream.name || stream.id).replace('-', ' - '),
             students: []
           });
-        }
-        classMap.get(student.stream).students.push(student);
-      });
-      setClassList(Array.from(classMap.values()).sort((a, b) => a.id.localeCompare(b.id)));
+        });
+        // Assign students to their streams
+        formattedStudents.forEach(student => {
+          if (classMap.has(student.stream)) {
+            classMap.get(student.stream).students.push(student);
+          } else {
+            // Fallback for students whose stream is missing in streams table
+            classMap.set(student.stream, {
+              id: student.stream,
+              name: String(student.stream).replace('-', ' - '),
+              students: [student]
+            });
+          }
+        });
+        setClassList(Array.from(classMap.values()).sort((a, b) => a.id.localeCompare(b.id)));
+      } else {
+        // Fallback: Build from students if streams fetch fails
+        const classMap = new Map();
+        formattedStudents.forEach(student => {
+          if (!classMap.has(student.stream)) {
+            classMap.set(student.stream, {
+              id: student.stream,
+              name: String(student.stream).replace('-', ' - '),
+              students: []
+            });
+          }
+          classMap.get(student.stream).students.push(student);
+        });
+        setClassList(Array.from(classMap.values()).sort((a, b) => a.id.localeCompare(b.id)));
+      }
       
     } catch (error) {
       console.error('Error loading students:', error);
@@ -161,14 +194,14 @@ const AttendanceOverview = () => {
     const present = classStudents.filter(s => attendanceData[s.id]?.status === 'present').length;
     const absent = classStudents.filter(s => attendanceData[s.id]?.status === 'absent').length;
     
-    return {
-      id: cls.id,
-      name: cls.name,
-      totalStudents: classStudents.length,
-      present,
-      absent,
-      attendanceRate: Math.round((present / classStudents.length) * 100)
-    };
+      return {
+        id: cls.id,
+        name: cls.name,
+        totalStudents: classStudents.length,
+        present,
+        absent,
+        attendanceRate: classStudents.length > 0 ? Math.round((present / classStudents.length) * 100) : 0
+      };
   });
 
   const handleClassClick = (classId: string) => {
